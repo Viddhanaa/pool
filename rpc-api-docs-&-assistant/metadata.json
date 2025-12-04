@@ -1,0 +1,5 @@
+{
+  "name": "RPC API Docs & Assistant",
+  "description": "A modern, interactive documentation viewer for RPC APIs featuring an AI-powered code generator and assistant using Google Gemini.",
+  "requestFramePermissions": []
+}

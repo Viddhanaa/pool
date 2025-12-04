@@ -1,0 +1,16 @@
+{
+  "name": "asd-miner-root",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "test:geth": "node scripts/test-geth.js",
+    "lint": "npm run lint --prefix backend && npm run lint --prefix web && npm run lint --prefix admin",
+    "typecheck": "npm run typecheck --prefix backend && npm run typecheck --prefix web && npm run typecheck --prefix admin",
+    "format": "npm run format --prefix backend && npm run format --prefix web && npm run format --prefix admin",
+    "ci": "npm run lint && npm run typecheck && npm test --prefix backend && npm test --prefix web && npm run build --prefix backend && npm run build --prefix web && npm run build --prefix admin"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "ethers": "^5.7.2"
+  }
+}

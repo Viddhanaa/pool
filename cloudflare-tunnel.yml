@@ -1,0 +1,90 @@
+tunnel: 408b43bd-c962-4e4c-b986-49a4b642276c
+credentials-file: /home/realcodes/.cloudflared/408b43bd-c962-4e4c-b986-49a4b642276c.json
+
+# Ingress rules - ASD Chain Production Domains
+ingress:
+  # VIDDHANA RPC via Cloudflare
+  - hostname: rpc.viddhana.com
+    service: http://localhost:8545
+    originRequest:
+      noTLSVerify: true
+  # Geth RPC 1
+  - hostname: geth-rpc1.asdchain.io
+    service: http://localhost:8545
+    originRequest:
+      noTLSVerify: true
+  
+  # Geth RPC 2
+  - hostname: geth-rpc2.asdchain.io
+    service: http://localhost:9545
+    originRequest:
+      noTLSVerify: true
+  
+  # Prometheus
+  - hostname: geth-prometheus.asdchain.io
+    service: http://localhost:9090
+    originRequest:
+      noTLSVerify: true
+  
+  # Grafana
+  - hostname: geth-grafana.asdminer.io
+    service: http://localhost:3000
+    originRequest:
+      noTLSVerify: true
+  
+  # Miner Dashboard
+  - hostname: geth-miner-dashboard.asdchain.io
+    service: http://localhost:4173
+    originRequest:
+      noTLSVerify: true
+  
+  # BlockScout Explorer
+  - hostname: geth-scan.asdchain.io
+    service: http://localhost:4001
+    originRequest:
+      noTLSVerify: true
+  
+  # BlockScout API
+  - hostname: geth-api.asdchain.io
+    service: http://localhost:4002
+    originRequest:
+      noTLSVerify: true
+  
+  # Miner Backend API
+  - hostname: miner-be.asdchain.io
+    service: http://localhost:4000
+    originRequest:
+      noTLSVerify: true
+  
+  # VIDDHANA Pool Web FE (proxied /api to backend via web container)
+  - hostname: pool.viddhana.com
+    service: http://localhost:4000
+    originRequest:
+      noTLSVerify: true
+  
+  # VIDDHANA RPC API Documentation
+  - hostname: docs.viddhana.com
+    service: http://localhost:3004
+    originRequest:
+      noTLSVerify: true
+  
+  # VIDDHANA Landing Page
+  - hostname: viddhana.com
+    service: http://localhost:3001
+    originRequest:
+      noTLSVerify: true
+  
+  # VIDDHANA Landing Page (www subdomain)
+  - hostname: www.viddhana.com
+    service: http://localhost:3001
+    originRequest:
+      noTLSVerify: true
+  
+  # Miner Admin
+  - hostname: miner-admin.asdchain.io
+    service: http://localhost:4174
+    originRequest:
+      noTLSVerify: true
+  
+  # Catch-all rule (required)
+  - service: http_status:404

@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint-typecheck-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+
+      - name: Install root deps
+        run: npm ci
+      - name: Install backend deps
+        run: npm ci
+        working-directory: backend
+      - name: Install web deps
+        run: npm ci
+        working-directory: web
+      - name: Install admin deps
+        run: npm ci
+        working-directory: admin
+
+      - name: Backend lint
+        run: npm run lint
+        working-directory: backend
+      - name: Backend typecheck
+        run: npm run typecheck
+        working-directory: backend
+      - name: Backend tests
+        run: npm test
+        working-directory: backend
+
+      - name: Web lint
+        run: npm run lint
+        working-directory: web
+      - name: Web typecheck
+        run: npm run typecheck
+        working-directory: web
+      - name: Web tests
+        run: npm test
+        working-directory: web
+
+      - name: Admin lint
+        run: npm run lint
+        working-directory: admin
+      - name: Admin typecheck
+        run: npm run typecheck
+        working-directory: admin
+      - name: Admin build
+        run: npm run build
+        working-directory: admin
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: lint-typecheck-test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build backend image
+        run: docker build -t asd-miner-backend ./backend
+      - name: Build web image
+        run: docker build -t asd-miner-web ./web
+      - name: Build admin image
+        run: docker build -t asd-miner-admin ./admin

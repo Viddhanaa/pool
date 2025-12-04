@@ -1,0 +1,47 @@
+╔══════════════════════════════════════════════════════════════════════╗
+║           🌐 VIDDHANA CHAIN PRODUCTION URLS                               ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+🔗 BLOCKCHAIN RPC:
+   RPC Node 1:           https://geth-rpc1.asdchain.io
+   RPC Node 2:           https://geth-rpc2.asdchain.io
+
+📊 MONITORING:
+   Prometheus:           https://geth-prometheus.asdchain.io
+   Grafana:              https://geth-grafana.asdminer.io
+
+🔍 BLOCK EXPLORER:
+   BlockScout Frontend:  https://geth-scan.asdchain.io
+   BlockScout API:       https://geth-api.asdchain.io
+
+⛏️  MINER PLATFORM:
+   Miner Dashboard:      https://geth-miner-dashboard.asdchain.io
+   Miner Backend API:    https://miner-be.asdchain.io
+   Miner Admin Panel:    https://miner-admin.asdchain.io
+
+═══════════════════════════════════════════════════════════════════════
+
+📋 PORT MAPPING:
+   localhost:8545   →  https://geth-rpc1.asdchain.io
+   localhost:9545   →  https://geth-rpc2.asdchain.io
+   localhost:9090   →  https://geth-prometheus.asdchain.io
+   localhost:3000   →  https://geth-grafana.asdminer.io
+   localhost:4173   →  https://geth-miner-dashboard.asdchain.io
+   localhost:4001   →  https://geth-scan.asdchain.io
+   localhost:4002   →  https://geth-api.asdchain.io
+   localhost:4000   →  https://miner-be.asdchain.io
+   localhost:4174   →  https://miner-admin.asdchain.io
+
+═══════════════════════════════════════════════════════════════════════
+
+🚀 SETUP STEPS:
+   1. Run: ./setup-asdchain-tunnel.sh
+   2. Follow the interactive prompts
+   3. Restart services: docker compose --profile chain --profile app restart
+
+🔧 CONFIGURATION FILES:
+   - cloudflare-tunnel.yml (Tunnel config)
+   - docker-compose.yml (Updated with production URLs)
+   - infra/blockscout/.env.production (BlockScout config)
+
+═══════════════════════════════════════════════════════════════════════

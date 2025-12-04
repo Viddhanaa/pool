@@ -1,0 +1,25 @@
+╔══════════════════════════════════════════════════════════════════════╗
+║           🌐 PUBLIC URL - CLOUDFLARE TUNNEL (SINGLE)                 ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+✅ ACTIVE - Generated: Sun Nov 30 04:12:58 PM UTC 2025
+
+📋 Base URL: 
+
+📍 Services:
+   🌐 Web Dashboard:      /
+   👨‍💼 Admin Dashboard:    /admin
+   🔌 Backend API:        /api
+   🔍 BlockScout:         /explorer
+   📊 Prometheus:         /prometheus
+   ⛓️  Geth RPC:          /rpc
+
+⚠️  This URL is TEMPORARY and will expire when you stop the tunnel!
+
+To stop:
+  tmux kill-session -t single-tunnel
+
+To view:
+  tmux attach -t single-tunnel
+
+═══════════════════════════════════════════════════════════════════════

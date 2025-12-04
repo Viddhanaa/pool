@@ -1,0 +1,145 @@
+{
+  "dashboard": {
+    "title": "Chocochoco Mining Pool Dashboard",
+    "tags": ["mining", "pool", "monitoring"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "title": "Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total[5m])",
+            "legendFormat": "{{method}} {{route}}"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8}
+      },
+      {
+        "title": "Error Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_request_errors_total[5m])",
+            "legendFormat": "{{error_type}}"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8}
+      },
+      {
+        "title": "Response Time (p95)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "{{route}}"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8}
+      },
+      {
+        "title": "Database Query Duration (p95)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(db_query_duration_seconds_bucket[5m]))",
+            "legendFormat": "{{query_type}}"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8}
+      },
+      {
+        "title": "Database Connection Pool",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "db_connection_pool_size",
+            "legendFormat": "{{state}}"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 16, "w": 8, "h": 8}
+      },
+      {
+        "title": "Active Miners",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "active_miners_total"
+          }
+        ],
+        "gridPos": {"x": 8, "y": 16, "w": 4, "h": 8}
+      },
+      {
+        "title": "Total Hashrate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "total_hashrate"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 16, "w": 4, "h": 8}
+      },
+      {
+        "title": "Pending Withdrawals",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "pending_withdrawals_total"
+          }
+        ],
+        "gridPos": {"x": 16, "y": 16, "w": 4, "h": 8}
+      },
+      {
+        "title": "Memory Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "process_resident_memory_bytes / 1024 / 1024",
+            "legendFormat": "RSS (MB)"
+          },
+          {
+            "expr": "process_heap_bytes / 1024 / 1024",
+            "legendFormat": "Heap (MB)"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 24, "w": 12, "h": 8}
+      },
+      {
+        "title": "CPU Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(process_cpu_seconds_total[5m])",
+            "legendFormat": "CPU"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 24, "w": 12, "h": 8}
+      },
+      {
+        "title": "Cache Hit Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(cache_hits_total[5m]) / (rate(cache_hits_total[5m]) + rate(cache_misses_total[5m]))",
+            "legendFormat": "Hit Rate"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 32, "w": 12, "h": 8}
+      },
+      {
+        "title": "Redis Operations",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(redis_operation_duration_seconds_count[5m])",
+            "legendFormat": "{{operation}}"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 32, "w": 12, "h": 8}
+      }
+    ],
+    "refresh": "10s",
+    "schemaVersion": 16,
+    "version": 1
+  }
+}
