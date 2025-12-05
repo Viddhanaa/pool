@@ -1,26 +1,38 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Header } from '@/components/layout/header';
+// import { useQuery } from '@tanstack/react-query';
+// import { api } from '@/lib/api';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { api } from '@/lib/api';
-import { formatHashrate, formatCurrency, truncateAddress } from '@/lib/utils';
-import { Trophy, Medal, Award, Gauge, Blocks, Wallet } from 'lucide-react';
+import { Header } from '@/components/layout/header';
+import { Trophy, TrendingUp, Award, Medal } from 'lucide-react';
+import { truncateAddress, formatHashrate, formatCurrency } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
-type TimeRange = 'day' | 'week' | 'month';
-type SortBy = 'hashrate' | 'blocks' | 'earnings';
-
 export default function LeaderboardPage() {
-  const [timeRange, setTimeRange] = useState<TimeRange>('day');
-  const [sortBy, setSortBy] = useState<SortBy>('hashrate');
+  const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d' | 'all'>('24h');
+  const [sortBy, setSortBy] = useState<'hashrate' | 'blocks' | 'earnings'>('hashrate');
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['leaderboard', timeRange, sortBy],
-    queryFn: () => api.leaderboard.get({ timeRange, sortBy }),
-  });
+  // Mock data - uncomment useQuery below to use real API
+  const data = {
+    miners: Array.from({ length: 50 }, (_, i) => ({
+      rank: i + 1,
+      address: `0x${Math.random().toString(16).slice(2, 10)}...${Math.random().toString(16).slice(2, 6)}`,
+      hashrate: Math.floor(Math.random() * 10000000000),
+      blocksFound: Math.floor(Math.random() * 100),
+      earnings: Math.floor(Math.random() * 1000000000),
+      change: Math.floor(Math.random() * 20) - 10,
+    })),
+  };
+
+  // Real API call (commented out)
+  // const { data, isLoading } = useQuery({
+  //   queryKey: ['leaderboard', timeRange, sortBy],
+  //   queryFn: () => api.leaderboard.get({ timeRange, sortBy }),
+  // });
+
+  const isLoading = false; // Mock loading state
 
   return (
     <>
@@ -35,14 +47,14 @@ export default function LeaderboardPage() {
           <div className="flex flex-wrap gap-4 mb-8">
             {/* Time Range */}
             <div className="flex gap-1 p-1 rounded-lg bg-background-secondary">
-              {(['day', 'week', 'month'] as TimeRange[]).map((range) => (
+              {(['24h', '7d', '30d'] as const).map((range) => (
                 <Button
                   key={range}
                   variant={timeRange === range ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setTimeRange(range)}
                 >
-                  {range === 'day' ? '24h' : range === 'week' ? '7d' : '30d'}
+                  {range}
                 </Button>
               ))}
             </div>
@@ -50,9 +62,9 @@ export default function LeaderboardPage() {
             {/* Sort By */}
             <div className="flex gap-1 p-1 rounded-lg bg-background-secondary">
               {([
-                { key: 'hashrate', icon: Gauge, label: 'Hashrate' },
-                { key: 'blocks', icon: Blocks, label: 'Blocks' },
-                { key: 'earnings', icon: Wallet, label: 'Earnings' },
+                { key: 'hashrate', icon: Trophy, label: 'Hashrate' },
+                { key: 'blocks', icon: TrendingUp, label: 'Blocks' },
+                { key: 'earnings', icon: Award, label: 'Earnings' },
               ] as const).map((item) => (
                 <Button
                   key={item.key}

@@ -65,7 +65,7 @@ export default function RegisterPage() {
           </div>
 
           {/* Step 1: Connect Wallet */}
-          <Card variant="glass" padding="lg" className="mb-6">
+          <Card variant="glass" padding="lg" className="mb-6 overflow-visible relative z-20">
             <div className="flex items-start gap-4">
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-accent/20 text-accent font-bold">
                 1
@@ -88,7 +88,7 @@ export default function RegisterPage() {
           </Card>
 
           {/* Step 2: Worker Name */}
-          <Card variant="glass" padding="lg" className="mb-6">
+          <Card variant="glass" padding="lg" className="mb-6 relative z-10">
             <div className="flex items-start gap-4">
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-accent/20 text-accent font-bold">
                 2
@@ -110,7 +110,7 @@ export default function RegisterPage() {
           </Card>
 
           {/* Step 3: Configure Miner */}
-          <Card variant="glass" padding="lg" className="mb-6">
+          <Card variant="glass" padding="lg" className="mb-6 relative z-10">
             <div className="flex items-start gap-4">
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-accent/20 text-accent font-bold">
                 3

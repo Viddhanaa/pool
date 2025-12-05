@@ -170,6 +170,24 @@ export const api = {
         totalPages: number;
         currentPage: number;
       }>('/api/v1/blocks', { params }),
+    getStats: async (): Promise<{
+      stats: {
+        totalBlocks: number;
+        confirmedBlocks: number;
+        orphanedBlocks: number;
+        pendingBlocks: number;
+        blocksLast24h: number;
+        blocksLastWeek: number;
+        latestHeight: number;
+        totalRewards: number;
+        totalFees: number;
+        orphanRate: number;
+      };
+    }> => {
+      const response = await fetch(`${API_URL}/api/v1/blocks/stats`);
+      if (!response.ok) throw new Error('Failed to fetch block stats');
+      return response.json();
+    },
     get: (id: string) =>
       request(`/api/v1/blocks/${id}`),
   },

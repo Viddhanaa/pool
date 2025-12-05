@@ -1,116 +1,44 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+// import { useQuery } from '@tanstack/react-query';
+// import { api } from '@/lib/api';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { DataTable, type Column } from '@/components/ui/table';
-import { api } from '@/lib/api';
-import { formatHashrate, formatRelativeTime, cn } from '@/lib/utils';
-import { Sparkles, RefreshCw, Settings, Power, PowerOff } from 'lucide-react';
-
-interface Worker {
-  id: string;
-  name: string;
-  hashrate: number;
-  isOnline: boolean;
-  lastSeen: string;
-  difficulty: number;
-  sharesValid: number;
-  sharesInvalid: number;
-}
+import { Cpu, RefreshCw, Search, Settings } from 'lucide-react';
 
 export default function WorkersPage() {
-  const [selectedWorkers, setSelectedWorkers] = useState<string[]>([]);
-  const [filter, setFilter] = useState<'all' | 'online' | 'offline'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'online' | 'offline'>('all');
 
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ['workers', filter],
-    queryFn: () => api.workers.list({ status: filter === 'all' ? undefined : filter }),
-    refetchInterval: 30000,
-  });
+  // Mock data - uncomment useQuery below to use real API
+  const data = {
+    workers: Array.from({ length: 15 }, (_, i) => ({
+      id: `worker-${i + 1}`,
+      name: `Worker-${String(i + 1).padStart(2, '0')}`,
+      hashrate: Math.floor(Math.random() * 5000000000),
+      isOnline: Math.random() > 0.3,
+      lastSeen: new Date(Date.now() - Math.random() * 3600000).toISOString(),
+      difficulty: 1024 * Math.pow(2, Math.floor(Math.random() * 10)),
+      sharesValid: Math.floor(Math.random() * 10000),
+      sharesInvalid: Math.floor(Math.random() * 100),
+    })),
+    total: 15,
+  };
 
-  const workers = data?.workers || [];
+  // Real API call (commented out)
+  // const { data, isLoading, refetch } = useQuery({
+  //   queryKey: ['workers', statusFilter],
+  //   queryFn: () => api.workers.list({ status: statusFilter !== 'all' ? statusFilter : undefined }),
+  //   refetchInterval: 30000,
+  // });
+
+  const isLoading = false; // Mock loading state
+  const refetch = () => console.log('Refreshing workers...');
+
+  const workers = data.workers || [];
   const onlineCount = workers.filter((w) => w.isOnline).length;
   const offlineCount = workers.filter((w) => !w.isOnline).length;
-
-  const columns: Column<Worker>[] = [
-    {
-      key: 'status',
-      header: '',
-      render: (worker) => (
-        <div
-          className={cn(
-            'w-2 h-2 rounded-full',
-            worker.isOnline ? 'bg-success' : 'bg-error'
-          )}
-        />
-      ),
-      className: 'w-8',
-    },
-    {
-      key: 'name',
-      header: 'Worker',
-      render: (worker) => (
-        <span className="font-mono text-sm">{worker.name}</span>
-      ),
-    },
-    {
-      key: 'hashrate',
-      header: 'Hashrate',
-      render: (worker) => (
-        <span className={cn('font-data', worker.isOnline ? 'text-accent' : 'text-error')}>
-          {formatHashrate(worker.hashrate)}
-        </span>
-      ),
-    },
-    {
-      key: 'difficulty',
-      header: 'Difficulty',
-      render: (worker) => (
-        <span className="font-data">{worker.difficulty.toLocaleString()}</span>
-      ),
-    },
-    {
-      key: 'shares',
-      header: 'Shares (V/I)',
-      render: (worker) => (
-        <div className="flex gap-2">
-          <span className="text-success font-data">{worker.sharesValid}</span>
-          <span className="text-foreground-subtle">/</span>
-          <span className="text-error font-data">{worker.sharesInvalid}</span>
-        </div>
-      ),
-    },
-    {
-      key: 'lastSeen',
-      header: 'Last Seen',
-      render: (worker) => (
-        <span className="text-foreground-muted text-sm">
-          {formatRelativeTime(worker.lastSeen)}
-        </span>
-      ),
-    },
-    {
-      key: 'actions',
-      header: '',
-      render: (worker) => (
-        <div className="flex gap-2">
-          <Button variant="ghost" size="icon-sm">
-            <Settings className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon-sm">
-            {worker.isOnline ? (
-              <Power className="h-4 w-4 text-success" />
-            ) : (
-              <PowerOff className="h-4 w-4 text-error" />
-            )}
-          </Button>
-        </div>
-      ),
-      className: 'text-right',
-    },
-  ];
 
   return (
     <div className="space-y-6">
@@ -130,9 +58,9 @@ export default function WorkersPage() {
           <Button
             variant="glow"
             size="sm"
-            disabled={selectedWorkers.length === 0}
+            disabled={workers.filter(w => w.isOnline).length === 0}
           >
-            <Sparkles className="h-4 w-4 mr-2" />
+            <Cpu className="h-4 w-4 mr-2" />
             Optimize Selected
           </Button>
         </div>
@@ -165,9 +93,9 @@ export default function WorkersPage() {
         {(['all', 'online', 'offline'] as const).map((status) => (
           <Button
             key={status}
-            variant={filter === status ? 'default' : 'ghost'}
+            variant={statusFilter === status ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => setFilter(status)}
+            onClick={() => setStatusFilter(status)}
           >
             {status.charAt(0).toUpperCase() + status.slice(1)}
           </Button>
@@ -176,12 +104,7 @@ export default function WorkersPage() {
 
       {/* Workers Table */}
       <Card variant="glass" className="overflow-hidden">
-        <DataTable
-          columns={columns}
-          data={workers}
-          isLoading={isLoading}
-          emptyMessage="No workers found"
-        />
+        {/* Table component here */}
       </Card>
     </div>
   );

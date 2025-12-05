@@ -29,10 +29,10 @@ export function WalletConnect() {
         {isDropdownOpen && (
           <>
             <div
-              className="fixed inset-0 z-40"
+              className="fixed inset-0 z-[100]"
               onClick={() => setIsDropdownOpen(false)}
             />
-            <div className="absolute right-0 mt-2 w-48 rounded-lg bg-background-secondary border border-white/10 shadow-lg z-50">
+            <div className="absolute right-0 mt-2 w-48 rounded-lg bg-background-secondary border border-white/10 shadow-lg z-[110]">
               <div className="p-2">
                 <button
                   onClick={() => {
@@ -68,10 +68,10 @@ export function WalletConnect() {
       {isDropdownOpen && (
         <>
           <div
-            className="fixed inset-0 z-40"
+            className="fixed inset-0 z-[100]"
             onClick={() => setIsDropdownOpen(false)}
           />
-          <div className="absolute right-0 mt-2 w-56 rounded-lg bg-background-secondary border border-white/10 shadow-lg z-50">
+          <div className="absolute right-0 mt-2 w-56 rounded-lg bg-background-secondary border border-white/10 shadow-lg z-[110]">
             <div className="p-2">
               <p className="px-3 py-2 text-tiny text-foreground-subtle">
                 Select a wallet

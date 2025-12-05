@@ -1,17 +1,32 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import { Header } from '@/components/layout/header';
+// import { useQuery } from '@tanstack/react-query';
+// import { api } from '@/lib/api';
 import { Card } from '@/components/ui/card';
-import { api } from '@/lib/api';
-import { formatHashrate, formatNumber } from '@/lib/utils';
-import { Server, Cpu, Gauge, Trophy } from 'lucide-react';
+import { Header } from '@/components/layout/header';
+import { Activity, Users, Zap, TrendingUp } from 'lucide-react';
+import { formatHashrate } from '@/lib/utils';
+
+const formatNumber = (num: number) => num.toLocaleString();
 
 export default function PoolsPage() {
-  const { data: poolStats, isLoading } = useQuery({
-    queryKey: ['stats', 'pool'],
-    queryFn: () => api.stats.pool(),
-  });
+  // Mock data - uncomment useQuery below to use real API
+  const poolStats = {
+    hashrate: 123456789012345,
+    networkHashrate: 987654321098765,
+    activeMiners: 1234,
+    difficulty: 85000000000000,
+    blocksFound: 567,
+    luck: 98.5,
+  };
+
+  // Real API call (commented out)
+  // const { data: poolStats, isLoading } = useQuery({
+  //   queryKey: ['pool-stats'],
+  //   queryFn: () => api.stats.pool(),
+  // });
+
+  const isLoading = false; // Mock loading state
 
   return (
     <>
@@ -25,30 +40,30 @@ export default function PoolsPage() {
           {/* Pool Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             <StatCard
-              icon={Gauge}
+              icon={Zap}
               label="Pool Hashrate"
-              value={formatHashrate(poolStats?.hashrate || 0)}
+              value={formatHashrate(poolStats.hashrate)}
               color="accent"
               isLoading={isLoading}
             />
             <StatCard
-              icon={Server}
+              icon={Users}
               label="Active Miners"
-              value={formatNumber(poolStats?.activeMiners || 0)}
+              value={poolStats.activeMiners.toString()}
               color="success"
               isLoading={isLoading}
             />
             <StatCard
-              icon={Cpu}
+              icon={Activity}
               label="Network Difficulty"
-              value={formatNumber(poolStats?.difficulty || 0, 2)}
+              value={poolStats.difficulty.toString()}
               color="purple"
               isLoading={isLoading}
             />
             <StatCard
-              icon={Trophy}
+              icon={TrendingUp}
               label="Blocks Found"
-              value={formatNumber(poolStats?.blocksFound || 0)}
+              value={poolStats.blocksFound.toString()}
               color="warning"
               isLoading={isLoading}
             />

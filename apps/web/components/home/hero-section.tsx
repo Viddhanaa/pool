@@ -74,9 +74,9 @@ export function HeroSection() {
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
-          <Button asChild size="lg" variant="outline">
-            <Link href="/pools">View Pools</Link>
-          </Button>
+          {/*<Button asChild size="lg" variant="outline">*/}
+          {/*  <Link href="/pools">View Pools</Link>*/}
+          {/*</Button>*/}
         </motion.div>
 
         {/* Features */}
