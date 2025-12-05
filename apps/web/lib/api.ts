@@ -1,6 +1,9 @@
 import { useAuthStore } from '@/stores/auth-store';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+// Use relative URL for production (nginx will proxy), fallback to localhost for dev
+const API_URL = typeof window !== 'undefined' 
+  ? '' // Use relative URLs in browser (nginx handles /api/ routing)
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001');
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>;

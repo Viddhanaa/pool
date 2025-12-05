@@ -32,7 +32,7 @@ export interface AppConfig {
   port: number;
   host: string;
   jwtSecret: string;
-  corsOrigin: string;
+  corsOrigin: string | string[] | boolean;
   rateLimitMax: number;
   rateLimitWindow: number;
 }
@@ -42,11 +42,28 @@ export async function buildApp(config?: Partial<AppConfig>): Promise<{
   start: () => Promise<void>;
   stop: () => Promise<void>;
 }> {
+  // Parse CORS origins - support comma-separated list or '*' for all
+  const parseCorsOrigin = (): string | string[] | boolean => {
+    const origin = process.env.CORS_ORIGIN;
+    if (!origin) {
+      // Default: allow common development origins
+      return ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000'];
+    }
+    if (origin === '*' || origin === 'true') {
+      return true; // Allow all origins
+    }
+    // Support comma-separated origins
+    if (origin.includes(',')) {
+      return origin.split(',').map(o => o.trim());
+    }
+    return origin;
+  };
+
   const appConfig: AppConfig = {
     port: parseInt(process.env.PORT || '3001', 10),
     host: process.env.HOST || '0.0.0.0',
     jwtSecret: process.env.JWT_SECRET || 'development-secret-change-in-production',
-    corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    corsOrigin: parseCorsOrigin(),
     rateLimitMax: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
     rateLimitWindow: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000', 10),
     ...config,
@@ -75,7 +92,11 @@ export async function buildApp(config?: Partial<AppConfig>): Promise<{
     origin: appConfig.corsOrigin,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    preflight: true,
+    strictPreflight: false,
+    preflightContinue: false,
   });
 
   await app.register(helmet, {

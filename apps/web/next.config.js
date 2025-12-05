@@ -3,17 +3,12 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   
-  // Enable standalone output for Docker deployment
-  output: 'standalone',
+  // Enable static export for nginx deployment
+  output: 'export',
   
-  // Enable experimental features
-  experimental: {
-    // Optimize package imports
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
-  },
-
-  // Image optimization
+  // Disable image optimization for static export
   images: {
+    unoptimized: true,
     domains: ['avatars.githubusercontent.com', 'images.unsplash.com'],
     formats: ['image/avif', 'image/webp'],
   },

@@ -25,14 +25,33 @@ export class WebSocketManager {
    * Initialize Socket.io server
    */
   initialize(httpServer: HttpServer, jwtSecret: string): SocketIOServer {
+    // Parse CORS origins - support comma-separated list or '*' for all
+    const parseCorsOrigin = (): string | string[] | boolean => {
+      const origin = process.env.CORS_ORIGIN;
+      if (!origin) {
+        // Default: allow common development origins
+        return ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000'];
+      }
+      if (origin === '*' || origin === 'true') {
+        return true; // Allow all origins
+      }
+      // Support comma-separated origins
+      if (origin.includes(',')) {
+        return origin.split(',').map(o => o.trim());
+      }
+      return origin;
+    };
+
     this.io = new SocketIOServer(httpServer, {
       cors: {
-        origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+        origin: parseCorsOrigin(),
         methods: ['GET', 'POST'],
         credentials: true,
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
       },
       pingTimeout: 60000,
       pingInterval: 25000,
+      allowEIO3: true, // Allow Engine.IO v3 clients
     });
 
     // Authentication middleware
