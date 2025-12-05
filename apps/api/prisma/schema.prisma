@@ -1,0 +1,167 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String    @id @default(cuid())
+  walletAddress     String    @unique @map("wallet_address")
+  username          String?   @unique
+  email             String?   @unique
+  passwordHash      String?   @map("password_hash")
+  twoFactorSecret   String?   @map("two_factor_secret")
+  twoFactorEnabled  Boolean   @default(false) @map("two_factor_enabled")
+  refreshToken      String?   @map("refresh_token")
+  payoutThreshold   Decimal   @default(0.1) @map("payout_threshold") @db.Decimal(18, 8)
+  payoutAddress     String?   @map("payout_address")
+  isActive          Boolean   @default(true) @map("is_active")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  lastLoginAt       DateTime? @map("last_login_at")
+
+  workers  Worker[]
+  shares   Share[]
+  payouts  Payout[]
+  sessions Session[]
+
+  @@index([walletAddress])
+  @@index([email])
+  @@map("users")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  refreshToken String   @unique @map("refresh_token")
+  userAgent    String?  @map("user_agent")
+  ipAddress    String?  @map("ip_address")
+  expiresAt    DateTime @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([refreshToken])
+  @@map("sessions")
+}
+
+model Worker {
+  id             String    @id @default(cuid())
+  userId         String    @map("user_id")
+  name           String
+  hashrate       Decimal   @default(0) @db.Decimal(20, 2)
+  sharesAccepted BigInt    @default(0) @map("shares_accepted")
+  sharesRejected BigInt    @default(0) @map("shares_rejected")
+  lastShareAt    DateTime? @map("last_share_at")
+  isOnline       Boolean   @default(false) @map("is_online")
+  difficulty     Decimal   @default(1) @db.Decimal(20, 8)
+  algorithm      String    @default("ethash")
+  version        String?
+  ipAddress      String?   @map("ip_address")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shares Share[]
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@index([isOnline])
+  @@index([lastShareAt])
+  @@map("workers")
+}
+
+model Share {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  workerId   String   @map("worker_id")
+  blockId    String?  @map("block_id")
+  difficulty Decimal  @db.Decimal(20, 8)
+  isValid    Boolean  @default(true) @map("is_valid")
+  nonce      String?
+  hash       String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  worker Worker  @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  block  Block?  @relation(fields: [blockId], references: [id])
+
+  @@index([userId])
+  @@index([workerId])
+  @@index([blockId])
+  @@index([createdAt])
+  @@map("shares")
+}
+
+model Block {
+  id            String   @id @default(cuid())
+  height        BigInt   @unique
+  hash          String   @unique
+  difficulty    Decimal  @db.Decimal(30, 0)
+  reward        Decimal  @db.Decimal(18, 8)
+  fees          Decimal  @default(0) @db.Decimal(18, 8)
+  finder        String?
+  finderUserId  String?  @map("finder_user_id")
+  confirmations Int      @default(0)
+  isOrphan      Boolean  @default(false) @map("is_orphan")
+  isConfirmed   Boolean  @default(false) @map("is_confirmed")
+  foundAt       DateTime @default(now()) @map("found_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  shares Share[]
+
+  @@index([height])
+  @@index([foundAt])
+  @@index([isConfirmed])
+  @@map("blocks")
+}
+
+model Payout {
+  id            String       @id @default(cuid())
+  userId        String       @map("user_id")
+  amount        Decimal      @db.Decimal(18, 8)
+  fee           Decimal      @default(0) @db.Decimal(18, 8)
+  txHash        String?      @unique @map("tx_hash")
+  toAddress     String       @map("to_address")
+  status        PayoutStatus @default(PENDING)
+  errorMessage  String?      @map("error_message")
+  processedAt   DateTime?    @map("processed_at")
+  confirmedAt   DateTime?    @map("confirmed_at")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("payouts")
+}
+
+model PoolStats {
+  id              String   @id @default(cuid())
+  hashrate        Decimal  @db.Decimal(30, 2)
+  activeWorkers   Int      @map("active_workers")
+  activeMiners    Int      @map("active_miners")
+  blocksFound     BigInt   @map("blocks_found")
+  totalPaid       Decimal  @db.Decimal(18, 8) @map("total_paid")
+  difficulty      Decimal  @db.Decimal(30, 0)
+  networkHashrate Decimal  @db.Decimal(30, 2) @map("network_hashrate")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@map("pool_stats")
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}

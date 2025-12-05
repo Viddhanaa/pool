@@ -1,0 +1,10 @@
+{
+  "name": "@viddhana-pool/ai-models",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "train": "python scripts/train.py",
+    "predict": "python scripts/predict.py",
+    "lint": "ruff check ."
+  }
+}

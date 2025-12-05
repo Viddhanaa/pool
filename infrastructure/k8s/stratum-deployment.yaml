@@ -1,0 +1,292 @@
+# =============================================================================
+# Viddhana Pool - Stratum Server Kubernetes Deployment
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stratum
+  namespace: viddhana-pool
+  labels:
+    app.kubernetes.io/name: stratum
+    app.kubernetes.io/component: mining-server
+    app.kubernetes.io/part-of: viddhana-pool
+    app.kubernetes.io/version: "1.0.0"
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: stratum
+      app.kubernetes.io/component: mining-server
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: stratum
+        app.kubernetes.io/component: mining-server
+        app.kubernetes.io/part-of: viddhana-pool
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: viddhana-stratum
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      
+      # Pod anti-affinity for high availability
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: stratum
+                topologyKey: kubernetes.io/hostname
+            - weight: 50
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: stratum
+                topologyKey: topology.kubernetes.io/zone
+      
+      # Node affinity for performance
+      nodeSelector:
+        node-type: compute
+      
+      tolerations:
+        - key: "dedicated"
+          operator: "Equal"
+          value: "stratum"
+          effect: "NoSchedule"
+      
+      containers:
+        - name: stratum
+          image: viddhana/stratum:latest
+          imagePullPolicy: Always
+          
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          
+          ports:
+            - name: stratum
+              containerPort: 3333
+              protocol: TCP
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+          
+          env:
+            - name: GO_ENV
+              value: "production"
+            - name: STRATUM_PORT
+              value: "3333"
+            - name: METRICS_PORT
+              value: "9090"
+            - name: LOG_LEVEL
+              value: "warn"
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: viddhana-config
+                  key: postgres-host
+            - name: POSTGRES_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: viddhana-config
+                  key: postgres-port
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: viddhana-config
+                  key: postgres-db
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: viddhana-secrets
+                  key: postgres-user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: viddhana-secrets
+                  key: postgres-password
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: viddhana-secrets
+                  key: redis-url
+            - name: POOL_WALLET_ADDRESS
+              valueFrom:
+                secretKeyRef:
+                  name: viddhana-secrets
+                  key: pool-wallet-address
+          
+          resources:
+            requests:
+              cpu: 500m
+              memory: 256Mi
+            limits:
+              cpu: "2"
+              memory: 1Gi
+          
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: metrics
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+          
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: metrics
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+          
+          startupProbe:
+            httpGet:
+              path: /health
+              port: metrics
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 30
+          
+          volumeMounts:
+            - name: config
+              mountPath: /app/configs
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      
+      volumes:
+        - name: config
+          configMap:
+            name: stratum-config
+        - name: tmp
+          emptyDir: {}
+      
+      terminationGracePeriodSeconds: 60
+---
+# Service Account
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: viddhana-stratum
+  namespace: viddhana-pool
+  labels:
+    app.kubernetes.io/name: stratum
+---
+# LoadBalancer Service for external access
+apiVersion: v1
+kind: Service
+metadata:
+  name: stratum
+  namespace: viddhana-pool
+  labels:
+    app.kubernetes.io/name: stratum
+    app.kubernetes.io/component: mining-server
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "3600"
+spec:
+  type: LoadBalancer
+  externalTrafficPolicy: Local
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 3600
+  ports:
+    - name: stratum
+      port: 3333
+      targetPort: 3333
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: stratum
+    app.kubernetes.io/component: mining-server
+---
+# Internal Service for metrics
+apiVersion: v1
+kind: Service
+metadata:
+  name: stratum-metrics
+  namespace: viddhana-pool
+  labels:
+    app.kubernetes.io/name: stratum
+    app.kubernetes.io/component: metrics
+spec:
+  type: ClusterIP
+  ports:
+    - name: metrics
+      port: 9090
+      targetPort: 9090
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: stratum
+    app.kubernetes.io/component: mining-server
+---
+# Pod Disruption Budget
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: stratum-pdb
+  namespace: viddhana-pool
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: stratum
+---
+# Stratum Config ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stratum-config
+  namespace: viddhana-pool
+data:
+  config.yaml: |
+    server:
+      port: 3333
+      max_connections: 10000
+      read_timeout: 30s
+      write_timeout: 30s
+    
+    vardiff:
+      min_difficulty: 1
+      max_difficulty: 65536
+      target_time: 15
+      retarget_time: 90
+      variance_percent: 30
+    
+    pool:
+      fee_percent: 1
+      payout_threshold: 0.1
+      block_reward: 2
+    
+    metrics:
+      enabled: true
+      port: 9090
+    
+    logging:
+      level: warn
+      format: json

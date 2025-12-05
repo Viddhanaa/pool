@@ -1,0 +1,108 @@
+# =============================================================================
+# Viddhana Pool - Web Dockerfile
+# Multi-stage build for Next.js frontend with standalone output
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Stage 1: Dependencies
+# -----------------------------------------------------------------------------
+FROM node:20-alpine AS deps
+
+# Install build dependencies
+RUN apk add --no-cache libc6-compat
+
+WORKDIR /app
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Copy workspace configuration
+COPY package.json pnpm-workspace.yaml turbo.json ./
+COPY apps/web/package.json ./apps/web/
+COPY packages/shared/package.json ./packages/shared/
+
+# Install dependencies
+RUN pnpm install
+
+# -----------------------------------------------------------------------------
+# Stage 2: Builder
+# -----------------------------------------------------------------------------
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
+COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
+
+# Copy source code
+COPY package.json pnpm-workspace.yaml turbo.json ./
+COPY apps/web ./apps/web
+COPY packages/shared ./packages/shared
+
+# Set build-time environment variables
+ARG NODE_ENV=production
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_WS_URL
+ARG NEXT_PUBLIC_STRATUM_HOST
+ARG NEXT_PUBLIC_STRATUM_PORT
+ARG NEXT_PUBLIC_CHAIN_ID
+ARG NEXT_PUBLIC_POOL_ADDRESS
+
+ENV NODE_ENV=${NODE_ENV}
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL}
+ENV NEXT_PUBLIC_STRATUM_HOST=${NEXT_PUBLIC_STRATUM_HOST}
+ENV NEXT_PUBLIC_STRATUM_PORT=${NEXT_PUBLIC_STRATUM_PORT}
+ENV NEXT_PUBLIC_CHAIN_ID=${NEXT_PUBLIC_CHAIN_ID}
+ENV NEXT_PUBLIC_POOL_ADDRESS=${NEXT_PUBLIC_POOL_ADDRESS}
+
+# Enable Next.js standalone output
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Build the application
+RUN pnpm --filter @viddhana/web build
+
+# -----------------------------------------------------------------------------
+# Stage 3: Production Runner
+# -----------------------------------------------------------------------------
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+# Security: Run as non-root user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+
+# Install wget for health checks
+RUN apk add --no-cache wget
+
+# Set environment
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# Copy public assets
+COPY --from=builder /app/apps/web/public ./public
+
+# Copy standalone build
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
+
+# Switch to non-root user
+USER nextjs
+
+# Expose port
+EXPOSE 3000
+
+# Start the application
+CMD ["node", "apps/web/server.js"]

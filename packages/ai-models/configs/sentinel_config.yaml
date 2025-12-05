@@ -1,0 +1,121 @@
+# Sentinel AI Configuration
+# ==========================
+# Anomaly detection and security monitoring
+
+model:
+  name: "sentinel_ensemble"
+  version: "1.0.0"
+  description: "Ensemble anomaly detection for mining security"
+
+ensemble:
+  # Weights must sum to 1.0
+  weights:
+    isolation_forest: 0.4
+    local_outlier_factor: 0.3
+    knn: 0.3
+
+  contamination: 0.1  # Expected anomaly rate
+
+detectors:
+  isolation_forest:
+    n_estimators: 100
+    max_samples: "auto"
+    max_features: 1.0
+    bootstrap: false
+    random_state: 42
+
+  local_outlier_factor:
+    n_neighbors: 20
+    algorithm: "auto"
+    leaf_size: 30
+    metric: "minkowski"
+    p: 2
+    novelty: true
+
+  knn:
+    n_neighbors: 5
+    method: "mean"
+    radius: 1.0
+    algorithm: "auto"
+
+thresholds:
+  severity:
+    low: 0.3
+    medium: 0.5
+    high: 0.7
+    critical: 0.9
+
+threat_types:
+  hashrate_anomaly:
+    description: "Unusual hashrate fluctuations"
+    severity_multiplier: 1.0
+  
+  earnings_anomaly:
+    description: "Abnormal earnings patterns"
+    severity_multiplier: 1.2
+  
+  worker_behavior:
+    description: "Suspicious worker activity"
+    severity_multiplier: 1.3
+  
+  network_attack:
+    description: "Potential network attack"
+    severity_multiplier: 1.5
+  
+  pool_hopping:
+    description: "Pool hopping detection"
+    severity_multiplier: 0.8
+  
+  share_manipulation:
+    description: "Share submission manipulation"
+    severity_multiplier: 1.4
+  
+  ddos_attempt:
+    description: "DDoS attack attempt"
+    severity_multiplier: 2.0
+
+circuit_breaker:
+  enabled: true
+  failure_threshold: 5
+  recovery_timeout: 60  # seconds
+  half_open_max_calls: 3
+
+features:
+  input:
+    - hashrate
+    - earnings_per_hour
+    - share_submission_rate
+    - reject_rate
+    - latency
+    - worker_online_time
+    - difficulty_ratio
+    - block_find_rate
+
+  normalization: zscore
+  window_size: 100  # samples for rolling stats
+
+monitoring:
+  enabled: true
+  alert_channels:
+    - webhook
+    - email
+  
+  webhooks:
+    slack: "${SLACK_WEBHOOK_URL}"
+    discord: "${DISCORD_WEBHOOK_URL}"
+
+  cooldown_period: 300  # seconds between alerts
+
+  metrics:
+    - total_detections
+    - anomaly_rate
+    - threat_distribution
+    - false_positive_rate
+
+history:
+  max_size: 10000
+  retention_days: 30
+
+logging:
+  level: INFO
+  include_features: false  # Don't log raw features for privacy

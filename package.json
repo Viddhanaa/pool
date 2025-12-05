@@ -1,16 +1,18 @@
 {
-  "name": "asd-miner-root",
+  "name": "viddhana-pool",
   "private": true,
-  "version": "0.0.0",
+  "workspaces": ["apps/*", "packages/*"],
   "scripts": {
-    "test:geth": "node scripts/test-geth.js",
-    "lint": "npm run lint --prefix backend && npm run lint --prefix web && npm run lint --prefix admin",
-    "typecheck": "npm run typecheck --prefix backend && npm run typecheck --prefix web && npm run typecheck --prefix admin",
-    "format": "npm run format --prefix backend && npm run format --prefix web && npm run format --prefix admin",
-    "ci": "npm run lint && npm run typecheck && npm test --prefix backend && npm test --prefix web && npm run build --prefix backend && npm run build --prefix web && npm run build --prefix admin"
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "stratum:dev": "cd apps/stratum && go run cmd/stratum/main.go",
+    "db:migrate": "turbo run db:migrate --filter=api",
+    "docker:up": "docker-compose -f infrastructure/docker/docker-compose.yml up -d"
   },
-  "dependencies": {
-    "dotenv": "^17.2.3",
-    "ethers": "^5.7.2"
-  }
+  "devDependencies": {
+    "turbo": "^2.0.0"
+  },
+  "packageManager": "pnpm@8.15.0"
 }

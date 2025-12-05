@@ -1,7 +1,99 @@
-node_modules
-dist
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Go
+bin/
+vendor/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+.eggs/
+*.egg-info/
+*.egg
+
+# Environment files
 .env
-*.log
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
 .DS_Store
-backend/.env
-!backend/.env
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+*.cover
+*.coverage
+
+# Turborepo
+.turbo/
+
+# Next.js
+.next/
+out/
+.vercel
+
+# Docker
+*.pid
+*.seed
+*.pid.lock
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+crash.log
+
+# Kubernetes secrets
+*-secret.yaml
+*-secrets.yaml
+
+# Compiled contracts
+artifacts/
+cache/
+typechain/
+typechain-types/
+
+# Misc
+*.bak
+*.tmp
+*.temp

@@ -1,0 +1,94 @@
+# =============================================================================
+# Viddhana Pool - API Dockerfile
+# Multi-stage build for Node.js/Fastify backend
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Stage 1: Dependencies
+# -----------------------------------------------------------------------------
+FROM node:20-alpine AS deps
+
+# Install build dependencies
+RUN apk add --no-cache libc6-compat python3 make g++
+
+WORKDIR /app
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Copy workspace configuration
+COPY package.json pnpm-workspace.yaml turbo.json ./
+COPY apps/api/package.json ./apps/api/
+COPY packages/shared/package.json ./packages/shared/
+
+# Install dependencies
+RUN pnpm install
+
+# -----------------------------------------------------------------------------
+# Stage 2: Builder
+# -----------------------------------------------------------------------------
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
+
+# Copy source code
+COPY package.json pnpm-workspace.yaml turbo.json ./
+COPY apps/api ./apps/api
+COPY packages/shared ./packages/shared
+
+# Generate Prisma client
+RUN cd apps/api && pnpm db:generate
+
+# Build the application
+ARG NODE_ENV=production
+ENV NODE_ENV=${NODE_ENV}
+
+RUN pnpm --filter @viddhana-pool/api build
+
+# -----------------------------------------------------------------------------
+# Stage 3: Production Runner
+# -----------------------------------------------------------------------------
+FROM node:20-alpine AS runner
+
+# Security: Run as non-root user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 api
+
+WORKDIR /app
+
+# Install production dependencies only
+RUN apk add --no-cache wget
+
+# Set environment
+ARG NODE_ENV=production
+ENV NODE_ENV=${NODE_ENV}
+ENV PORT=3001
+
+# Copy built application
+COPY --from=builder --chown=api:nodejs /app/apps/api/dist ./dist
+COPY --from=builder --chown=api:nodejs /app/apps/api/package.json ./
+COPY --from=builder --chown=api:nodejs /app/apps/api/node_modules ./node_modules
+
+# Copy Prisma schema and generated client
+COPY --from=builder --chown=api:nodejs /app/apps/api/prisma ./prisma
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3001/health || exit 1
+
+# Switch to non-root user
+USER api
+
+# Expose port
+EXPOSE 3001
+
+# Start the application
+CMD ["node", "dist/index.js"]

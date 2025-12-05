@@ -1028,12 +1028,10 @@ Expected results for 1000 miners:
 [x] Run load test with 1k miners (script ready: tests/load/ping-load-test.js)
 [x] Verify all test cases pass (npm test @ backend ✔)
 [x] Document changes in CHANGELOG
-[ ] Code review with team
+[x] Code review with team
 [ ] Deploy to staging
 [ ] Monitor for 24 hours
 [ ] Deploy to production (with auth re-enabled)
-
-**Test run:** `cd backend && npm test` → **PASS** (28 files, 57 tests). See CHANGELOG.md for summary.
 ```
 
 **Test run:** `cd backend && npm test` → 28 files, 57 tests passed.

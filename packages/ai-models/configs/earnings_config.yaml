@@ -1,0 +1,74 @@
+# Earnings Prediction Model Configuration
+# =========================================
+
+model:
+  name: "earnings_lstm"
+  version: "1.0.0"
+  description: "LSTM with attention for mining earnings prediction"
+
+architecture:
+  input_size: 10
+  hidden_size: 128
+  num_layers: 2
+  num_heads: 4
+  dropout: 0.2
+  output_size: 24  # 24-hour predictions
+  sequence_length: 168  # 7 days of hourly data
+
+training:
+  batch_size: 32
+  learning_rate: 0.001
+  weight_decay: 0.01
+  epochs: 100
+  early_stopping_patience: 10
+  early_stopping_min_delta: 0.0001
+  gradient_clip: 1.0
+  
+  scheduler:
+    type: "reduce_on_plateau"
+    patience: 5
+    factor: 0.5
+    min_lr: 0.00001
+
+data:
+  train_split: 0.7
+  val_split: 0.15
+  test_split: 0.15
+  shuffle_train: true
+  
+  features:
+    - hashrate
+    - difficulty
+    - block_time
+    - network_hashrate
+    - earnings
+    - shares_submitted
+    - shares_accepted
+    - reject_rate
+    - worker_count
+    - pool_fee
+
+  target: earnings
+  
+  normalization: zscore
+  
+  augmentation:
+    enabled: true
+    noise_level: 0.01
+    scale_range: [0.95, 1.05]
+    dropout_rate: 0.05
+
+inference:
+  batch_size: 64
+  confidence_levels: [0.90, 0.95, 0.99]
+  cache_ttl: 300  # 5 minutes
+
+mlflow:
+  experiment_name: "prometheus_earnings"
+  tracking_uri: "sqlite:///mlflow.db"
+  log_artifacts: true
+  log_model: true
+
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

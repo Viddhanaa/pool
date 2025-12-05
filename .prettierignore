@@ -1,6 +1,0 @@
-node_modules
-dist
-coverage
-build
-*.log
-npm-debug.log*

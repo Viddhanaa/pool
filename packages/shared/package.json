@@ -1,0 +1,92 @@
+{
+  "name": "@viddhana/shared",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./types": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/types/index.js",
+      "require": "./dist/types/index.cjs"
+    },
+    "./types/api": {
+      "types": "./dist/types/api.d.ts",
+      "import": "./dist/types/api.js",
+      "require": "./dist/types/api.cjs"
+    },
+    "./types/blockchain": {
+      "types": "./dist/types/blockchain.d.ts",
+      "import": "./dist/types/blockchain.js",
+      "require": "./dist/types/blockchain.cjs"
+    },
+    "./config": {
+      "types": "./dist/config/index.d.ts",
+      "import": "./dist/config/index.js",
+      "require": "./dist/config/index.cjs"
+    },
+    "./config/chains": {
+      "types": "./dist/config/chains.d.ts",
+      "import": "./dist/config/chains.js",
+      "require": "./dist/config/chains.cjs"
+    },
+    "./config/constants": {
+      "types": "./dist/config/constants.d.ts",
+      "import": "./dist/config/constants.js",
+      "require": "./dist/config/constants.cjs"
+    },
+    "./validation": {
+      "types": "./dist/validation/schemas.d.ts",
+      "import": "./dist/validation/schemas.js",
+      "require": "./dist/validation/schemas.cjs"
+    },
+    "./utils": {
+      "types": "./dist/utils/index.d.ts",
+      "import": "./dist/utils/index.js",
+      "require": "./dist/utils/index.cjs"
+    },
+    "./utils/formatters": {
+      "types": "./dist/utils/formatters.d.ts",
+      "import": "./dist/utils/formatters.js",
+      "require": "./dist/utils/formatters.cjs"
+    },
+    "./utils/helpers": {
+      "types": "./dist/utils/helpers.d.ts",
+      "import": "./dist/utils/helpers.js",
+      "require": "./dist/utils/helpers.cjs"
+    },
+    "./utils/crypto": {
+      "types": "./dist/utils/crypto.d.ts",
+      "import": "./dist/utils/crypto.js",
+      "require": "./dist/utils/crypto.cjs"
+    },
+    "./errors": {
+      "types": "./dist/errors/index.d.ts",
+      "import": "./dist/errors/index.js",
+      "require": "./dist/errors/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

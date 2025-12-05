@@ -1,0 +1,71 @@
+# Difficulty Prediction Model Configuration
+# ==========================================
+
+model:
+  name: "difficulty_neuralprophet"
+  version: "1.0.0"
+  description: "NeuralProphet for mining difficulty forecasting"
+
+architecture:
+  growth: "linear"
+  changepoint_range: 0.8
+  n_changepoints: 25
+  
+  seasonality:
+    yearly: true
+    weekly: true
+    daily: false
+    mode: "multiplicative"
+  
+  neural_network:
+    d_hidden: 64
+    num_hidden_layers: 2
+    ar_layers: [64, 64]
+
+training:
+  epochs: 100
+  learning_rate: 0.1
+  batch_size: 64
+  loss_func: "MSE"
+  normalize: "auto"
+
+  # Cross-validation settings
+  cv_folds: 5
+  cv_horizon: 14  # days
+  cv_period: 30   # days between cutoffs
+
+data:
+  frequency: "D"  # Daily
+  history_min_days: 365
+  
+  features:
+    - difficulty
+    - block_time_avg
+    - hashrate_change
+  
+  regressors:
+    - name: "halving"
+      mode: "multiplicative"
+    - name: "network_upgrade"
+      mode: "additive"
+
+inference:
+  max_horizon: 90  # days
+  include_history: false
+  uncertainty_samples: 100
+
+blockchain:
+  # Bitcoin-style difficulty adjustment
+  adjustment_interval: 2016  # blocks
+  target_block_time: 600     # seconds (10 minutes)
+  max_adjustment: 4.0        # Maximum adjustment factor
+  min_adjustment: 0.25       # Minimum adjustment factor
+
+alerts:
+  enabled: true
+  thresholds:
+    difficulty_change_warning: 10   # % change
+    difficulty_change_critical: 25  # % change
+
+logging:
+  level: INFO
