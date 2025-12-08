@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { db } from '../lib/db.js';
 import { cache } from '../lib/redis.js';
 import { createValidationPreHandler } from '../middleware/validate.js';
-import { optionalAuth } from '../middleware/auth.js';
+import { authenticate } from '../middleware/auth.js';
 import { createChildLogger } from '../lib/logger.js';
 
 const logger = createChildLogger('blocks-routes');
@@ -51,7 +51,11 @@ export async function blockRoutes(fastify: FastifyInstance): Promise<void> {
         isOrphan: false,
       };
 
-      const [blocks, total] = await Promise.all([
+      // Calculate date thresholds for summary
+      const now = new Date();
+      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+      const [blocks, total, confirmedBlocks, pendingBlocks, totalRewardsAgg, blocksLast24h] = await Promise.all([
         db.block.findMany({
           where,
           skip: (page - 1) * limit,
@@ -71,10 +75,21 @@ export async function blockRoutes(fastify: FastifyInstance): Promise<void> {
           },
         }),
         db.block.count({ where }),
+        db.block.count({ where: { isConfirmed: true, isOrphan: false } }),
+        db.block.count({ where: { isConfirmed: false, isOrphan: false } }),
+        db.block.aggregate({
+          where: { isConfirmed: true, isOrphan: false },
+          _sum: { reward: true },
+        }),
+        db.block.count({ where: { foundAt: { gte: oneDayAgo }, isOrphan: false } }),
       ]);
 
+      // Calculate average block time (simplified - based on 24h blocks)
+      const averageBlockTime = blocksLast24h > 1 ? Math.round(86400 / blocksLast24h) : 0;
+
+      const totalPages = Math.ceil(total / limit);
       const result = {
-        blocks: blocks.map((block) => ({
+        data: blocks.map((block) => ({
           id: block.id,
           height: Number(block.height),
           hash: block.hash,
@@ -86,9 +101,21 @@ export async function blockRoutes(fastify: FastifyInstance): Promise<void> {
           isConfirmed: block.isConfirmed,
           foundAt: block.foundAt,
         })),
-        total,
-        page,
-        limit,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+        },
+        summary: {
+          totalBlocks: total,
+          confirmedBlocks,
+          pendingBlocks,
+          totalRewards: String(Number(totalRewardsAgg._sum.reward || 0)),
+          averageBlockTime,
+        },
       };
 
       await cache.set(cacheKey, result, 10); // 10 second cache
@@ -135,7 +162,7 @@ export async function blockRoutes(fastify: FastifyInstance): Promise<void> {
       // If not found by ID, try by height
       if (!block) {
         const height = parseInt(id, 10);
-        if (!isNaN(height)) {
+        if (!isNaN(height) && height >= 0) {
           block = await db.block.findUnique({
             where: { height: BigInt(height) },
             include: {
@@ -259,17 +286,10 @@ export async function blockRoutes(fastify: FastifyInstance): Promise<void> {
   fastify.get(
     '/mine',
     {
-      preHandler: optionalAuth,
+      preHandler: authenticate,
     },
     async (request, reply) => {
-      if (!request.user) {
-        return reply.status(401).send({
-          error: 'Unauthorized',
-          message: 'Authentication required',
-        });
-      }
-
-      const userId = request.user.userId;
+      const userId = request.user!.userId;
 
       const blocks = await db.block.findMany({
         where: { finderUserId: userId },

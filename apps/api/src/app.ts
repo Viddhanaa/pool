@@ -215,14 +215,14 @@ export async function buildApp(config?: Partial<AppConfig>): Promise<{
     });
   });
 
-  // Register routes
-  await app.register(authRoutes, { prefix: '/api/auth' });
-  await app.register(workerRoutes, { prefix: '/api/workers' });
-  await app.register(statsRoutes, { prefix: '/api/stats' });
-  await app.register(payoutRoutes, { prefix: '/api/payouts' });
-  await app.register(blockRoutes, { prefix: '/api/blocks' });
-  await app.register(dashboardRoutes, { prefix: '/api/dashboard' });
-  await app.register(aiRoutes, { prefix: '/api/ai' });
+  // Register routes (v1 API)
+  await app.register(authRoutes, { prefix: '/api/v1/auth' });
+  await app.register(workerRoutes, { prefix: '/api/v1/workers' });
+  await app.register(statsRoutes, { prefix: '/api/v1/stats' });
+  await app.register(payoutRoutes, { prefix: '/api/v1/payouts' });
+  await app.register(blockRoutes, { prefix: '/api/v1/blocks' });
+  await app.register(dashboardRoutes, { prefix: '/api/v1/dashboard' });
+  await app.register(aiRoutes, { prefix: '/api/v1/ai' });
 
   // Create HTTP server for Socket.io
   const httpServer = createServer(app.server);
