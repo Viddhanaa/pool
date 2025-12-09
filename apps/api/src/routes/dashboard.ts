@@ -8,14 +8,20 @@ import { createChildLogger } from '../lib/logger.js';
 const logger = createChildLogger('dashboard-routes');
 
 export async function dashboardRoutes(fastify: FastifyInstance): Promise<void> {
-  // All routes require authentication
-  fastify.addHook('preHandler', authenticate);
+  // DEVELOPMENT: Comment out auth to use seed data
+  // fastify.addHook('preHandler', authenticate);
 
   /**
    * Get complete dashboard overview
    */
   fastify.get('/overview', async (request, reply) => {
-    const userId = request.user!.userId;
+    // DEVELOPMENT: Use first seed user if not authenticated
+    let userId = request.user?.userId;
+
+    if (!userId) {
+      const firstUser = await fastify.prisma.user.findFirst({ where: { isActive: true } });
+      userId = firstUser?.id || 'mock-user';
+    }
 
     const [
       poolStats,
@@ -81,7 +87,11 @@ export async function dashboardRoutes(fastify: FastifyInstance): Promise<void> {
    * Get recent activity
    */
   fastify.get('/activity', async (request, reply) => {
-    const userId = request.user!.userId;
+    let userId = request.user?.userId;
+    if (!userId) {
+      const firstUser = await fastify.prisma.user.findFirst({ where: { isActive: true } });
+      userId = firstUser?.id || 'mock-user';
+    }
 
     const [recentPayouts, recentShares] = await Promise.all([
       fastify.prisma.payout.findMany({
@@ -137,7 +147,11 @@ export async function dashboardRoutes(fastify: FastifyInstance): Promise<void> {
    * Get alerts/notifications
    */
   fastify.get('/alerts', async (request, reply) => {
-    const userId = request.user!.userId;
+    let userId = request.user?.userId;
+    if (!userId) {
+      const firstUser = await fastify.prisma.user.findFirst({ where: { isActive: true } });
+      userId = firstUser?.id || 'mock-user';
+    }
 
     const alerts: Array<{
       type: 'warning' | 'error' | 'info' | 'success';
@@ -206,7 +220,11 @@ export async function dashboardRoutes(fastify: FastifyInstance): Promise<void> {
    * Get quick stats for header
    */
   fastify.get('/quick-stats', async (request, reply) => {
-    const userId = request.user!.userId;
+    let userId = request.user?.userId;
+    if (!userId) {
+      const firstUser = await fastify.prisma.user.findFirst({ where: { isActive: true } });
+      userId = firstUser?.id || 'mock-user';
+    }
 
     const [hashrateStats, balance, workers] = await Promise.all([
       statsService.getUserHashrateStats(userId),
