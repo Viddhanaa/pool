@@ -2,26 +2,15 @@
 
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
-// import { useQuery } from '@tanstack/react-query';
-// import { api } from '@/lib/api';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api';
 
 export function StatsSection() {
-  // Mock data - uncomment useQuery below to use real API
-  const statsData = {
-    stats: {
-      totalBlocks: 12345,
-      blocksLast24h: 42,
-      totalRewards: 7812500000, // 78.125 VIDP
-      orphanRate: 1.5,
-    },
-  };
-
-  // Real API call (commented out)
-  // const { data: statsData } = useQuery({
-  //   queryKey: ['blocks-stats'],
-  //   queryFn: () => api.blocks.getStats(),
-  //   refetchInterval: 30000, // Refresh every 30s
-  // });
+  const { data: statsData } = useQuery({
+    queryKey: ['blocks-stats'],
+    queryFn: () => apiClient.get('/blocks/stats'),
+    refetchInterval: 30000,
+  });
 
   const stats = statsData?.stats;
 

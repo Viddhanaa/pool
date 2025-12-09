@@ -12,7 +12,7 @@ import {
   TooltipProps,
 } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { apiClient } from '@/lib/api';
 import { formatHashrate } from '@/lib/utils';
 
 interface HashrateChartProps {
@@ -56,7 +56,7 @@ export function HashrateChart({
 }: HashrateChartProps) {
   const { data, isLoading } = useQuery({
     queryKey: ['stats', 'hashrate', timeRange],
-    queryFn: () => api.stats.hashrate({ range: timeRange }),
+    queryFn: () => apiClient.get('/stats/hashrate', { params: { range: timeRange } }),
     refetchInterval: 60000, // Refetch every minute
   });
 

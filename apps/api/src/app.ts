@@ -15,6 +15,7 @@ import workerRoutes from './routes/workers.js';
 import statsRoutes from './routes/stats.js';
 import payoutRoutes from './routes/payouts.js';
 import blockRoutes from './routes/blocks.js';
+import leaderboardRoutes from './routes/leaderboard.js';
 import dashboardRoutes from './routes/dashboard.js';
 import aiRoutes from './routes/ai.js';
 
@@ -221,6 +222,7 @@ export async function buildApp(config?: Partial<AppConfig>): Promise<{
   await app.register(statsRoutes, { prefix: '/api/v1/stats' });
   await app.register(payoutRoutes, { prefix: '/api/v1/payouts' });
   await app.register(blockRoutes, { prefix: '/api/v1/blocks' });
+  await app.register(leaderboardRoutes, { prefix: '/api/v1' });
   await app.register(dashboardRoutes, { prefix: '/api/v1/dashboard' });
   await app.register(aiRoutes, { prefix: '/api/v1/ai' });
 

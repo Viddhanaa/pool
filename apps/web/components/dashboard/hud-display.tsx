@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Gauge, Users, TrendingUp, Wallet, Sparkles } from 'lucide-react';
-import { api } from '@/lib/api';
+import { apiClient } from '@/lib/api';
 import { useSocket } from '@/hooks/use-socket';
 import { formatHashrate, formatCurrency } from '@/lib/utils';
 
@@ -99,7 +99,7 @@ function MetricCard({
 export function HUDDisplay() {
   const { data, refetch, isLoading } = useQuery({
     queryKey: ['dashboard', 'overview'],
-    queryFn: () => api.dashboard.overview(),
+    queryFn: () => apiClient.get('/dashboard/overview'),
     refetchInterval: 30000, // Refetch every 30 seconds
   });
 

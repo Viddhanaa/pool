@@ -127,8 +127,8 @@ async function seedWorkers(users: any[]) {
       usedNames.add(workerName);
       
       const isOnline = Math.random() > 0.3; // 70% chance online
-      const hashrate = isOnline ? randomDecimal(50, 500, 2) : 0; // MH/s
-      
+      const hashrate = isOnline ? randomDecimal(100, 200, 2) * 1e9 : 0; // 100-200 GH/s in H/s
+
       const worker = await prisma.worker.create({
         data: {
           userId: user.id,
@@ -281,7 +281,7 @@ async function seedPoolStats() {
         activeMiners: randomInt(15, 25),
         blocksFound: BigInt(randomInt(0, 3)),
         totalPaid: randomDecimal(100, 500, 8),
-        difficulty: BigInt(randomInt(1000000000000, 5000000000000)),
+        difficulty: randomDecimal(1000000000000, 5000000000000, 2), // Changed from BigInt to Decimal
         networkHashrate: randomDecimal(800000000000, 1200000000000, 2),
         createdAt: date,
       },

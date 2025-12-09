@@ -6,57 +6,76 @@ import { HeroSection } from '@/components/home/hero-section';
 import { StatsSection } from '@/components/home/stats-section';
 import { RecentBlocks } from '@/components/home/recent-blocks';
 import { StatCard } from '@/components/dashboard/stat-card';
-import { RecentBlocksWidget } from '@/components/dashboard/recent-blocks-widget';
 import { NetworkStats } from '@/components/dashboard/network-stats';
-import { Box, Users, Zap, TrendingUp, Activity, Clock } from 'lucide-react';
+import { RecentBlocksWidget } from '@/components/dashboard/recent-blocks-widget';
+import { Box, Activity, Users, TrendingUp, Zap, Clock } from 'lucide-react';
+import { usePoolStats, useRecentBlocks } from '@/hooks/use-api';
 
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Simulate initial loading
+  // Fetch real data from API - NO MOCK DATA
+  const { data: poolStats } = usePoolStats();
+  const { data: blocksData } = useRecentBlocks(5);
+
+  // Log seed data from API
+  console.log('🔍 Homepage - Pool Stats:', {
+    poolStats,
+    source: 'seed database via /api/v1/stats/pool'
+  });
+  console.log('🔍 Homepage - Recent Blocks:', {
+    blocksData,
+    blockCount: blocksData?.blocks?.length,
+    source: 'seed database via /api/v1/blocks/recent'
+  });
+
+  // Simulate loading
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
+    const timer = setTimeout(() => setIsLoading(false), 1500);
     return () => clearTimeout(timer);
   }, []);
 
   // Auto-refresh every 10 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      setRefreshKey(prev => prev + 1);
-    }, 10000); // 10 seconds
-
+      setRefreshKey((prev) => prev + 1);
+    }, 10000);
     return () => clearInterval(interval);
   }, []);
 
-  // Mock dashboard data with auto-refresh simulation
-  const dashboardData = useMemo(() => ({
-    latestBlock: {
-      height: 850123 + refreshKey, // Simulate new blocks
-      time: '2m ago',
-    },
-    totalTransactions: (1234567 + refreshKey * 5).toLocaleString(),
-    activeMiners: 245 + Math.floor(Math.random() * 10) - 5,
-    poolHashrate: 123456789012345,
-    networkHashrate: 987654321098765,
-    difficulty: 85000000000000,
-    avgBlockTime: 600,
-    blocksToday: 42 + Math.floor(refreshKey / 6), // ~1 block per hour simulation
-  }), [refreshKey]);
+  // Use real API data - NO FALLBACK TO MOCK
+  const dashboardData = useMemo(() => {
+    const latestBlock = blocksData?.blocks?.[0];
+    return {
+      latestBlock: {
+        height: latestBlock?.height || 0,
+        time: latestBlock ? 'Just now' : 'Loading...',
+      },
+      poolHashrate: poolStats?.hashrate || 0,
+      networkHashrate: poolStats?.networkHashrate || 0,
+      difficulty: poolStats?.difficulty || 0,
+      avgBlockTime: 600,
+      totalTransactions: poolStats?.totalPaid ? (poolStats.totalPaid * 1000).toFixed(0) : '0',
+      activeMiners: poolStats?.activeMiners || 0,
+      blocksToday: poolStats?.blocksFound || 0,
+    };
+  }, [refreshKey, poolStats, blocksData]);
 
-  // Mock recent blocks
-  const recentBlocks = useMemo(() =>
-    Array.from({ length: 5 }, (_, i) => ({
-      id: `block-${i + 1}`,
-      height: 850123 - i,
-      hash: `0x${Math.random().toString(16).slice(2, 50).padEnd(64, '0')}`,
-      reward: 625000000,
-      confirmations: Math.floor(Math.random() * 10),
-      foundAt: new Date(Date.now() - i * 120000).toISOString(),
-    })), []
-  );
+  // Use real blocks from API - NO MOCK DATA
+  const recentBlocks = useMemo(() => {
+    if (blocksData?.blocks && blocksData.blocks.length > 0) {
+      return blocksData.blocks.map((block: any) => ({
+        id: block.id,
+        height: block.height,
+        hash: block.hash,
+        reward: block.reward,
+        confirmations: block.confirmations,
+        foundAt: block.foundAt,
+      }));
+    }
+    return [];
+  }, [blocksData]);
 
   return (
     <>
@@ -69,11 +88,11 @@ export default function HomePage() {
           <div className="container mx-auto px-4">
             <h2 className="text-2xl font-bold mb-6">Live Dashboard</h2>
 
-            {/* Main Stats Grid - All equal height */}
+            {/* Main Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               <StatCard
                 title="Latest Block"
-                value={`#${dashboardData.latestBlock.height.toLocaleString()}`}
+                value={dashboardData.latestBlock.height > 0 ? `#${dashboardData.latestBlock.height.toLocaleString()}` : 'Loading...'}
                 subtitle={dashboardData.latestBlock.time}
                 icon={Box}
                 color="accent"
@@ -86,7 +105,6 @@ export default function HomePage() {
                 subtitle="All time"
                 icon={Activity}
                 color="success"
-                trend={{ value: 5.2, label: 'vs yesterday' }}
                 isLoading={isLoading}
               />
 
@@ -96,7 +114,6 @@ export default function HomePage() {
                 subtitle="Currently mining"
                 icon={Users}
                 color="purple"
-                trend={{ value: 12, label: 'vs last week' }}
                 isLoading={isLoading}
               />
 
@@ -106,16 +123,15 @@ export default function HomePage() {
                 subtitle="Last 24 hours"
                 icon={TrendingUp}
                 color="warning"
-                trend={{ value: -3.1, label: 'vs yesterday' }}
                 isLoading={isLoading}
               />
             </div>
 
-            {/* Secondary Stats - All equal height */}
+            {/* Secondary Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
               <StatCard
                 title="Pool Hashrate"
-                value={isLoading ? '—' : '123.45 TH/s'}
+                value={dashboardData.poolHashrate > 0 ? `${(dashboardData.poolHashrate / 1e12).toFixed(2)} TH/s` : 'Loading...'}
                 subtitle="Current mining power"
                 icon={Zap}
                 color="accent"
@@ -124,7 +140,7 @@ export default function HomePage() {
 
               <StatCard
                 title="Network Difficulty"
-                value={isLoading ? '—' : '85.00 T'}
+                value={dashboardData.difficulty > 0 ? `${(dashboardData.difficulty / 1e12).toFixed(2)} T` : 'Loading...'}
                 subtitle="Current difficulty"
                 icon={Activity}
                 color="success"
@@ -133,7 +149,7 @@ export default function HomePage() {
 
               <StatCard
                 title="Avg Block Time"
-                value={isLoading ? '—' : '10m 0s'}
+                value="10m 0s"
                 subtitle="Last 100 blocks"
                 icon={Clock}
                 color="purple"
@@ -141,7 +157,7 @@ export default function HomePage() {
               />
             </div>
 
-            {/* Widgets Grid - Equal height */}
+            {/* Widgets Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
               <div className="h-full">
                 <RecentBlocksWidget
@@ -164,8 +180,8 @@ export default function HomePage() {
         </section>
 
         <StatsSection />
-        <RecentBlocks />
       </main>
     </>
   );
 }
+

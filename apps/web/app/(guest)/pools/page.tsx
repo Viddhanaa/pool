@@ -1,41 +1,70 @@
 'use client';
 
-// import { useQuery } from '@tanstack/react-query';
-// import { api } from '@/lib/api';
+import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Header } from '@/components/layout/header';
 import { Activity, Users, Zap, TrendingUp } from 'lucide-react';
 import { formatHashrate } from '@/lib/utils';
+import { usePoolStats } from '@/hooks/use-api';
 
 const formatNumber = (num: number) => num.toLocaleString();
 
 export default function PoolsPage() {
-  // Mock data - uncomment useQuery below to use real API
-  const poolStats = {
-    hashrate: 123456789012345,
-    networkHashrate: 987654321098765,
-    activeMiners: 1234,
-    difficulty: 85000000000000,
-    blocksFound: 567,
-    luck: 98.5,
-  };
+  const { data, isLoading } = usePoolStats();
+  const [poolStats, setPoolStats] = useState({
+    hashrate: 0,
+    networkHashrate: 0,
+    activeMiners: 0,
+    difficulty: 0,
+    blocksFound: 0,
+    luck: 100,
+  });
 
-  // Real API call (commented out)
-  // const { data: poolStats, isLoading } = useQuery({
-  //   queryKey: ['pool-stats'],
-  //   queryFn: () => api.stats.pool(),
-  // });
+  // Update poolStats when data changes
+  useEffect(() => {
+    if (data?.stats) {
+      setPoolStats({
+        hashrate: data.stats.hashrate || 0,
+        networkHashrate: data.stats.networkHashrate || 0,
+        activeMiners: data.stats.activeMiners || 0,
+        difficulty: data.stats.difficulty || 0,
+        blocksFound: data.stats.blocksFound || 0,
+        luck: data.stats.luck || 100,
+      });
+    }
+  }, [data]);
 
-  const isLoading = false; // Mock loading state
+  console.log('🔍 Pools Page - API Response:', {
+    rawData: data,
+    isLoading,
+    timestamp: new Date().toISOString()
+  });
+
+
+  console.log('📊 Pools Page - Processed Stats:', {
+    poolStats,
+    source: 'seed database via /api/v1/stats/pool',
+    debug: {
+      hasData: !!data,
+      hasStats: !!data?.stats,
+      rawHashrate: data?.stats?.hashrate,
+      processedHashrate: poolStats.hashrate,
+    }
+  });
 
   return (
     <>
       <Header />
       <main className="min-h-screen pt-24 pb-12">
         <div className="container mx-auto px-4">
-          <h1 className="text-h1 mb-8">
-            <span className="text-accent">Mining</span> Pools
-          </h1>
+          <div className="mb-8">
+            <h1 className="text-h1">
+              <span className="text-accent">Mining</span> Pools
+            </h1>
+            <p className="text-foreground-subtle mt-2">
+              Live statistics from {poolStats.activeMiners} active miners (from seed data)
+            </p>
+          </div>
 
           {/* Pool Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
@@ -71,30 +100,36 @@ export default function PoolsPage() {
 
           {/* Pool Cards */}
           <h2 className="text-h2 mb-6">Available Pools</h2>
+          <p className="text-foreground-subtle mb-4">
+            Total network hashrate: {formatHashrate(poolStats.networkHashrate)} | Pool luck: {poolStats.luck.toFixed(1)}%
+          </p>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             <PoolCard
-              name="Bitcoin"
-              symbol="BTC"
-              hashrate="85.2 TH/s"
-              miners={1547}
+              name="Viddhana Pool"
+              symbol="VIDP"
+              hashrate={formatHashrate(poolStats.hashrate)}
+              miners={poolStats.activeMiners}
               fee="1%"
               minPayout="0.001 BTC"
+              blocks={poolStats.blocksFound}
             />
             <PoolCard
-              name="Litecoin"
-              symbol="LTC"
-              hashrate="24.8 TH/s"
-              miners={892}
-              fee="0.5%"
-              minPayout="0.01 LTC"
+              name="Solo Mining"
+              symbol="SOLO"
+              hashrate={formatHashrate(poolStats.hashrate * 0.15)}
+              miners={Math.floor(poolStats.activeMiners * 0.1)}
+              fee="0%"
+              minPayout="0 BTC"
+              blocks={Math.floor(poolStats.blocksFound * 0.05)}
             />
             <PoolCard
-              name="Kaspa"
-              symbol="KAS"
-              hashrate="15.4 TH/s"
-              miners={408}
+              name="PPLNS Pool"
+              symbol="PPLNS"
+              hashrate={formatHashrate(poolStats.hashrate * 0.85)}
+              miners={Math.floor(poolStats.activeMiners * 0.9)}
               fee="0.5%"
-              minPayout="100 KAS"
+              minPayout="0.0001 BTC"
+              blocks={Math.floor(poolStats.blocksFound * 0.95)}
             />
           </div>
 
@@ -166,9 +201,10 @@ interface PoolCardProps {
   miners: number;
   fee: string;
   minPayout: string;
+  blocks?: number;
 }
 
-function PoolCard({ name, symbol, hashrate, miners, fee, minPayout }: PoolCardProps) {
+function PoolCard({ name, symbol, hashrate, miners, fee, minPayout, blocks }: PoolCardProps) {
   return (
     <Card variant="default" hover="glow" padding="default">
       <div className="flex items-center justify-between mb-4">
@@ -187,7 +223,7 @@ function PoolCard({ name, symbol, hashrate, miners, fee, minPayout }: PoolCardPr
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/5">
+      <div className="grid grid-cols-4 gap-3 pt-4 border-t border-white/5">
         <div>
           <p className="text-tiny text-foreground-subtle">Miners</p>
           <p className="font-data">{formatNumber(miners)}</p>
@@ -200,6 +236,12 @@ function PoolCard({ name, symbol, hashrate, miners, fee, minPayout }: PoolCardPr
           <p className="text-tiny text-foreground-subtle">Min Payout</p>
           <p className="font-data text-sm">{minPayout}</p>
         </div>
+        {blocks !== undefined && (
+          <div>
+            <p className="text-tiny text-foreground-subtle">Blocks</p>
+            <p className="font-data text-success">{blocks}</p>
+          </div>
+        )}
       </div>
     </Card>
   );

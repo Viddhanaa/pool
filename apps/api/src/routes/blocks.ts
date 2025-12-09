@@ -51,7 +51,6 @@ export async function blockRoutes(fastify: FastifyInstance): Promise<void> {
         isOrphan: false,
       };
 
-      // Calculate date thresholds for summary
       const now = new Date();
       const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
@@ -84,12 +83,11 @@ export async function blockRoutes(fastify: FastifyInstance): Promise<void> {
         db.block.count({ where: { foundAt: { gte: oneDayAgo }, isOrphan: false } }),
       ]);
 
-      // Calculate average block time (simplified - based on 24h blocks)
       const averageBlockTime = blocksLast24h > 1 ? Math.round(86400 / blocksLast24h) : 0;
-
       const totalPages = Math.ceil(total / limit);
+
       const result = {
-        data: blocks.map((block) => ({
+        blocks: blocks.map((block) => ({
           id: block.id,
           height: Number(block.height),
           hash: block.hash,
@@ -101,28 +99,126 @@ export async function blockRoutes(fastify: FastifyInstance): Promise<void> {
           isConfirmed: block.isConfirmed,
           foundAt: block.foundAt,
         })),
+        total,
         pagination: {
-          total,
           page,
           limit,
           totalPages,
           hasNext: page < totalPages,
           hasPrev: page > 1,
         },
-        summary: {
-          totalBlocks: total,
-          confirmedBlocks,
-          pendingBlocks,
-          totalRewards: String(Number(totalRewardsAgg._sum.reward || 0)),
-          averageBlockTime,
-        },
       };
 
-      await cache.set(cacheKey, result, 10); // 10 second cache
-
+      await cache.set(cacheKey, result, 10);
       return reply.send(result);
     }
   );
+
+  /**
+   * Get recent blocks (public) - MUST be before /:id route
+   */
+  fastify.get('/recent', async (request, reply) => {
+    const { limit = 5 } = request.query as { limit?: number };
+
+    const cacheKey = `blocks:recent:${limit}`;
+    const cached = await cache.get(cacheKey);
+
+    if (cached) {
+      return reply.send(cached);
+    }
+
+    const blocks = await db.block.findMany({
+      where: { isOrphan: false },
+      orderBy: { height: 'desc' },
+      take: Number(limit),
+      select: {
+        id: true,
+        height: true,
+        hash: true,
+        reward: true,
+        confirmations: true,
+        isConfirmed: true,
+        isOrphan: true,
+        foundAt: true,
+        finder: true,
+      },
+    });
+
+    const result = {
+      blocks: blocks.map((block) => ({
+        id: block.id,
+        height: Number(block.height),
+        hash: block.hash,
+        reward: Number(block.reward),
+        confirmations: block.confirmations,
+        isConfirmed: block.isConfirmed,
+        isOrphan: block.isOrphan,
+        foundAt: block.foundAt,
+        finder: block.finder,
+      })),
+    };
+
+    await cache.set(cacheKey, result, 10);
+    return reply.send(result);
+  });
+
+  /**
+   * Get block statistics (public)
+   */
+  fastify.get('/stats', async (request, reply) => {
+    const cacheKey = 'blocks:stats';
+    const cached = await cache.get(cacheKey);
+
+    if (cached) {
+      return reply.send(cached);
+    }
+
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    const [
+      totalBlocks,
+      confirmedBlocks,
+      orphanedBlocks,
+      blocksLast24h,
+      blocksLastWeek,
+      latestBlock,
+      totalRewards,
+    ] = await Promise.all([
+      db.block.count(),
+      db.block.count({ where: { isConfirmed: true } }),
+      db.block.count({ where: { isOrphan: true } }),
+      db.block.count({ where: { foundAt: { gte: oneDayAgo } } }),
+      db.block.count({ where: { foundAt: { gte: oneWeekAgo } } }),
+      db.block.findFirst({
+        where: { isConfirmed: true },
+        orderBy: { height: 'desc' },
+      }),
+      db.block.aggregate({
+        where: { isConfirmed: true },
+        _sum: { reward: true, fees: true },
+      }),
+    ]);
+
+    const result = {
+      stats: {
+        totalBlocks,
+        confirmedBlocks,
+        orphanedBlocks,
+        pendingBlocks: totalBlocks - confirmedBlocks - orphanedBlocks,
+        blocksLast24h,
+        blocksLastWeek,
+        latestHeight: latestBlock ? Number(latestBlock.height) : 0,
+        totalRewards: Number(totalRewards._sum.reward || 0),
+        totalFees: Number(totalRewards._sum.fees || 0),
+        orphanRate: totalBlocks > 0 ? (orphanedBlocks / totalBlocks) * 100 : 0,
+      },
+    };
+
+    await cache.set(cacheKey, result, 30);
+    return reply.send(result);
+  });
 
   /**
    * Get block by ID or height (public)
@@ -137,7 +233,6 @@ export async function blockRoutes(fastify: FastifyInstance): Promise<void> {
     async (request, reply) => {
       const { id } = request.params;
 
-      // Try to find by ID first, then by height
       let block = await db.block.findUnique({
         where: { id },
         include: {
@@ -159,7 +254,6 @@ export async function blockRoutes(fastify: FastifyInstance): Promise<void> {
         },
       });
 
-      // If not found by ID, try by height
       if (!block) {
         const height = parseInt(id, 10);
         if (!isNaN(height) && height >= 0) {
@@ -222,65 +316,6 @@ export async function blockRoutes(fastify: FastifyInstance): Promise<void> {
   );
 
   /**
-   * Get block statistics (public)
-   */
-  fastify.get('/stats', async (request, reply) => {
-    const cacheKey = 'blocks:stats';
-    const cached = await cache.get(cacheKey);
-
-    if (cached) {
-      return reply.send(cached);
-    }
-
-    const now = new Date();
-    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-
-    const [
-      totalBlocks,
-      confirmedBlocks,
-      orphanedBlocks,
-      blocksLast24h,
-      blocksLastWeek,
-      latestBlock,
-      totalRewards,
-    ] = await Promise.all([
-      db.block.count(),
-      db.block.count({ where: { isConfirmed: true } }),
-      db.block.count({ where: { isOrphan: true } }),
-      db.block.count({ where: { foundAt: { gte: oneDayAgo } } }),
-      db.block.count({ where: { foundAt: { gte: oneWeekAgo } } }),
-      db.block.findFirst({
-        where: { isConfirmed: true },
-        orderBy: { height: 'desc' },
-      }),
-      db.block.aggregate({
-        where: { isConfirmed: true },
-        _sum: { reward: true, fees: true },
-      }),
-    ]);
-
-    const result = {
-      stats: {
-        totalBlocks,
-        confirmedBlocks,
-        orphanedBlocks,
-        pendingBlocks: totalBlocks - confirmedBlocks - orphanedBlocks,
-        blocksLast24h,
-        blocksLastWeek,
-        latestHeight: latestBlock ? Number(latestBlock.height) : 0,
-        totalRewards: Number(totalRewards._sum.reward || 0),
-        totalFees: Number(totalRewards._sum.fees || 0),
-        orphanRate: totalBlocks > 0 ? (orphanedBlocks / totalBlocks) * 100 : 0,
-      },
-    };
-
-    await cache.set(cacheKey, result, 30);
-
-    return reply.send(result);
-  });
-
-  /**
    * Get blocks found by current user (authenticated)
    */
   fastify.get(
@@ -322,3 +357,4 @@ export async function blockRoutes(fastify: FastifyInstance): Promise<void> {
 }
 
 export default blockRoutes;
+
