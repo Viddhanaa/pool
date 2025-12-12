@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
@@ -40,28 +41,39 @@ export function Sidebar() {
     >
       {/* Logo */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-white/5">
-        {!isCollapsed && (
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
-              <span className="text-background font-bold text-sm">VP</span>
-            </div>
+        <Link href="/" className={cn("flex items-center gap-3", isCollapsed && "mx-auto")}>
+          <Image
+            src="/logo/logo.png"
+            alt="VIDDHANA POOL Logo"
+            width={36}
+            height={36}
+            className="object-contain"
+          />
+          {!isCollapsed && (
             <span className="font-bold text-lg">
               <span className="text-accent">VIDDHANA</span>
             </span>
-          </Link>
-        )}
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className={cn(isCollapsed && 'mx-auto')}
-        >
-          {isCollapsed ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <ChevronLeft className="h-4 w-4" />
           )}
-        </Button>
+        </Link>
+        {!isCollapsed && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+        )}
+        {isCollapsed && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="absolute top-3 right-2"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       {/* Navigation */}

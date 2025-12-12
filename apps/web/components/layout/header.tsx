@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Bell, Menu, X } from 'lucide-react';
@@ -24,14 +25,18 @@ export function Header() {
             <div className="container mx-auto px-4">
                 <div className="flex items-center justify-between h-16">
                     {/* Logo */}
-                    <Link href="/" className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
-                            <span className="text-background font-bold text-sm">VP</span>
-                        </div>
+                    <Link href="/" className="flex items-center gap-3">
+                        <Image
+                            src="/logo/logo.png"
+                            alt="VIDDHANA POOL Logo"
+                            width={40}
+                            height={40}
+                            className="object-contain"
+                        />
                         <span className="font-bold text-lg hidden sm:block">
               <span className="text-accent">VIDDHANA</span>{' '}
                             <span className="text-foreground">POOL</span>
-            </span>
+                        </span>
                     </Link>
 
                     {/* Desktop Navigation */}
