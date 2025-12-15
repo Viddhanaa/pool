@@ -292,6 +292,14 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
       });
     }
 
+    // Validate token format (6 digits)
+    if (!/^\d{6}$/.test(token)) {
+      return reply.status(400).send({
+        error: 'Bad Request',
+        message: 'Invalid 2FA token format',
+      });
+    }
+
     const userId = await fastify.redis.get(`2fa:pending:${tempToken}`);
 
     if (!userId) {
@@ -307,6 +315,16 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
       return reply.status(401).send({
         error: 'Unauthorized',
         message: 'User not found',
+      });
+    }
+
+    // Verify 2FA token against stored secret
+    const isTokenValid = await authService.verifyTwoFactorToken(userId, token);
+    if (!isTokenValid) {
+      logger.warn({ userId }, '2FA token verification failed');
+      return reply.status(401).send({
+        error: 'Unauthorized',
+        message: 'Invalid 2FA token',
       });
     }
 
@@ -331,6 +349,8 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
 
     // Delete temp token
     await fastify.redis.del(`2fa:pending:${tempToken}`);
+
+    logger.info({ userId }, 'User logged in with 2FA');
 
     return reply.send({
       user,

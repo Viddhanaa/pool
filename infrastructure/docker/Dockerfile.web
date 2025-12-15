@@ -13,16 +13,16 @@ RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Install pnpm with specific version for reproducibility
+RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
 
 # Copy workspace configuration
-COPY package.json pnpm-workspace.yaml turbo.json ./
+COPY package.json pnpm-workspace.yaml turbo.json pnpm-lock.yaml ./
 COPY apps/web/package.json ./apps/web/
 COPY packages/shared/package.json ./packages/shared/
 
-# Install dependencies
-RUN pnpm install
+# Install dependencies with frozen lockfile for reproducibility
+RUN pnpm install --frozen-lockfile
 
 # -----------------------------------------------------------------------------
 # Stage 2: Builder
@@ -31,8 +31,8 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Install pnpm with specific version for reproducibility
+RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
 
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
@@ -78,8 +78,9 @@ WORKDIR /app
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Install wget for health checks
-RUN apk add --no-cache wget
+# Install wget for health checks and security updates
+RUN apk add --no-cache wget dumb-init && \
+    apk upgrade --no-cache
 
 # Set environment
 ENV NODE_ENV=production
@@ -103,6 +104,9 @@ USER nextjs
 
 # Expose port
 EXPOSE 3000
+
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
 
 # Start the application
 CMD ["node", "apps/web/server.js"]

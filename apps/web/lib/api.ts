@@ -1,14 +1,28 @@
 import { useAuthStore } from '@/stores/auth-store';
 
-const API_URL = typeof window !== 'undefined'
-  ? 'http://localhost:3001/api/v1' // Direct API URL in browser
-  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1');
+// API URL configuration
+// - In browser: Use relative URL (nginx proxies /api to API server) or env variable
+// - On server: Use env variable or default to localhost
+// Note: API routes are prefixed with /api/v1
+const getApiUrl = () => {
+  if (typeof window !== 'undefined') {
+    // Browser: prefer relative URL for nginx proxy, fallback to env
+    const envUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (envUrl) return envUrl;
+    // Use relative URL - nginx will proxy /api to the API server
+    return '/api/v1';
+  }
+  // Server-side: use env or localhost
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api/v1';
+};
+
+const API_URL = getApiUrl();
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>;
 }
 
-class ApiError extends Error {
+export class ApiError extends Error {
   constructor(
     message: string,
     public status: number,
@@ -91,5 +105,3 @@ export const apiClient = {
 
 // Legacy api export
 export const api = apiClient;
-
-export { ApiError };

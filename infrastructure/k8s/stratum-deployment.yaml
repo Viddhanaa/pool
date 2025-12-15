@@ -72,7 +72,7 @@ spec:
       containers:
         - name: stratum
           image: viddhana/stratum:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           
           securityContext:
             allowPrivilegeEscalation: false
@@ -138,9 +138,11 @@ spec:
             requests:
               cpu: 500m
               memory: 256Mi
+              ephemeral-storage: 100Mi
             limits:
               cpu: "2"
               memory: 1Gi
+              ephemeral-storage: 500Mi
           
           livenessProbe:
             httpGet:

@@ -1,4 +1,4 @@
-# Stratum Mining Server Configuration - Local Development
+# Stratum Mining Server - Local/Production Configuration
 
 server:
   host: "0.0.0.0"
@@ -9,21 +9,20 @@ server:
   
   tls:
     enabled: false
-    cert_file: "/etc/stratum/server.crt"
-    key_file: "/etc/stratum/server.key"
   
   metrics:
     enabled: true
     port: 9090
 
 mining:
-  pool_address: "your-pool-address-here"
-  coin_type: "bitcoin"
+  pool_address: "0xC6EF29019d6acB8F50F464A015CfeA63a8a45C15"
+  coin_type: "ethereum"
   
+  # Difficulty settings for PoA (lower difficulty since no real PoW)
   initial_difficulty: 1.0
   min_difficulty: 0.001
-  max_difficulty: 1000000.0
-  target_share_time: 10s
+  max_difficulty: 1000.0
+  target_share_time: 15s
   retarget_time: 90s
   variance_percent: 30
   
@@ -34,36 +33,34 @@ mining:
   extranonce2_size: 4
 
 redis:
-  host: "172.17.0.1"
+  host: "localhost"
   port: 6379
   password: ""
   db: 0
   pool_size: 100
-  
   key_prefix: "stratum:"
   share_ttl: 3600s
   worker_ttl: 300s
 
 postgres:
-  host: "172.17.0.1"
+  host: "localhost"
   port: 5432
   database: "viddhana_pool"
   user: "viddhana"
   password: "viddhana_secret_2024"
   max_connections: 50
   min_connections: 10
-  
   connect_timeout: 10s
   statement_timeout: 30s
 
 logging:
-  level: "debug"
-  format: "console"
+  level: "info"
+  format: "json"
   output: "stdout"
-  file_path: "/var/log/stratum/stratum.log"
 
+# Ethereum Node RPC
 node:
-  rpc_url: "http://localhost:8332"
-  rpc_user: "rpcuser"
-  rpc_password: "rpcpassword"
-  poll_interval: 1s
+  rpc_url: "http://localhost:8545"
+  rpc_user: ""
+  rpc_password: ""
+  poll_interval: 3s

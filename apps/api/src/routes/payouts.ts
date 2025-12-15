@@ -168,13 +168,9 @@ export async function payoutRoutes(fastify: FastifyInstance): Promise<void> {
       const { id } = request.params;
       const userId = request.user!.userId;
 
-      const result = await payoutService.getPayoutHistory({
-        userId,
-        page: 1,
-        limit: 1,
+      const payout = await fastify.prisma.payout.findFirst({
+        where: { id, userId },
       });
-
-      const payout = result.payouts.find((p) => p.id === id);
 
       if (!payout) {
         return reply.status(404).send({
@@ -183,7 +179,20 @@ export async function payoutRoutes(fastify: FastifyInstance): Promise<void> {
         });
       }
 
-      return reply.send({ payout });
+      return reply.send({
+        payout: {
+          id: payout.id,
+          amount: Number(payout.amount),
+          fee: Number(payout.fee),
+          txHash: payout.txHash,
+          toAddress: payout.toAddress,
+          status: payout.status,
+          errorMessage: payout.errorMessage,
+          processedAt: payout.processedAt,
+          confirmedAt: payout.confirmedAt,
+          createdAt: payout.createdAt,
+        },
+      });
     }
   );
 

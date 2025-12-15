@@ -51,7 +51,7 @@ spec:
       containers:
         - name: web
           image: viddhana/web:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           
           securityContext:
             allowPrivilegeEscalation: false
@@ -75,9 +75,11 @@ spec:
             requests:
               cpu: 100m
               memory: 128Mi
+              ephemeral-storage: 100Mi
             limits:
               cpu: "1"
               memory: 1Gi
+              ephemeral-storage: 500Mi
           
           livenessProbe:
             httpGet:

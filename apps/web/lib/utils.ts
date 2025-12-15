@@ -11,12 +11,12 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Format hashrate with appropriate unit
  */
-export function formatHashrate(hashrate: number): string {
-  if (hashrate === 0) return '0 H/s';
+export function formatHashrate(hashrate: number | null | undefined): string {
+  if (hashrate == null || hashrate === 0 || !Number.isFinite(hashrate)) return '0 H/s';
 
   const units = ['H/s', 'KH/s', 'MH/s', 'GH/s', 'TH/s', 'PH/s', 'EH/s'];
   let unitIndex = 0;
-  let value = hashrate;
+  let value = Math.abs(hashrate);
 
   while (value >= 1000 && unitIndex < units.length - 1) {
     value /= 1000;
@@ -45,23 +45,24 @@ export function formatCurrency(
 /**
  * Format crypto amount
  */
-export function formatCrypto(value: number, symbol: string = 'BTC', decimals: number = 8): string {
+export function formatCrypto(value: number, symbol: string = 'BTCD', decimals: number = 8): string {
   return `${value.toFixed(decimals)} ${symbol}`;
 }
 
 /**
  * Format large numbers with abbreviations
  */
-export function formatNumber(value: number, decimals: number = 0): string {
-  if (value === 0) return '0';
+export function formatNumber(value: number | null | undefined, decimals: number = 0): string {
+  if (value == null || value === 0 || !Number.isFinite(value)) return '0';
 
   const suffixes = ['', 'K', 'M', 'B', 'T'];
-  const tier = Math.floor(Math.log10(Math.abs(value)) / 3);
+  const absValue = Math.abs(value);
+  const tier = Math.floor(Math.log10(absValue) / 3);
 
   if (tier === 0) return value.toFixed(decimals);
 
-  const suffix = suffixes[tier];
-  const scale = Math.pow(10, tier * 3);
+  const suffix = suffixes[Math.min(tier, suffixes.length - 1)];
+  const scale = Math.pow(10, Math.min(tier, suffixes.length - 1) * 3);
   const scaled = value / scale;
 
   return `${scaled.toFixed(decimals)}${suffix}`;
@@ -70,11 +71,18 @@ export function formatNumber(value: number, decimals: number = 0): string {
 /**
  * Format relative time (e.g., "2 hours ago")
  */
-export function formatRelativeTime(date: Date | string): string {
+export function formatRelativeTime(date: Date | string | null | undefined): string {
+  if (!date) return 'Unknown';
+  
   const now = new Date();
   const target = new Date(date);
+  
+  // Check for invalid date
+  if (isNaN(target.getTime())) return 'Invalid date';
+  
   const diffInSeconds = Math.floor((now.getTime() - target.getTime()) / 1000);
 
+  if (diffInSeconds < 0) return 'Just now';
   if (diffInSeconds < 60) return 'just now';
   if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
@@ -86,7 +94,8 @@ export function formatRelativeTime(date: Date | string): string {
 /**
  * Truncate wallet address
  */
-export function truncateAddress(address: string, startChars: number = 6, endChars: number = 4): string {
+export function truncateAddress(address: string | null | undefined, startChars: number = 6, endChars: number = 4): string {
+  if (!address) return '';
   if (address.length <= startChars + endChars) return address;
   return `${address.slice(0, startChars)}...${address.slice(-endChars)}`;
 }

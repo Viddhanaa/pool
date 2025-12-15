@@ -1,16 +1,24 @@
-import { redirect } from 'next/navigation';
+'use client';
+
 import { Sidebar } from '@/components/layout/sidebar';
+import { useAuthStore } from '@/stores/auth-store';
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // TODO: Add actual auth check
-  // const session = await getSession();
-  // if (!session) {
-  //   redirect('/login');
-  // }
+  const user = useAuthStore((state) => state.user);
+  const isLoading = useAuthStore((state) => state.isLoading);
+
+  // Show loading state while checking auth
+  if (isLoading) {
+    return (
+      <div className="flex h-screen bg-background items-center justify-center">
+        <div className="animate-pulse text-foreground-muted">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-background">
@@ -24,12 +32,12 @@ export default function DashboardLayout({
           <div>
             <h2 className="text-lg font-semibold">Dashboard</h2>
             <p className="text-tiny text-foreground-subtle">
-              Welcome back, Miner
+              Welcome back{user?.walletAddress ? `, ${user.walletAddress.slice(0, 6)}...` : ', Miner'}
             </p>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+              <div className="w-2 h-2 rounded-full bg-success animate-pulse" aria-hidden="true" />
               <span className="text-sm text-foreground-muted">Connected</span>
             </div>
           </div>

@@ -1,21 +1,33 @@
 import { ethers, upgrades } from "hardhat";
-import { Contract } from "ethers";
+import type { BaseContract } from "ethers";
 
 interface DeployedContracts {
-  payoutManager: Contract;
-  batchPayout: Contract;
-  licenseNFT: Contract;
-  dePINOracle: Contract;
-  multiSigWallet: Contract;
+  payoutManager: BaseContract;
+  batchPayout: BaseContract;
+  licenseNFT: BaseContract;
+  dePINOracle: BaseContract;
+  multiSigWallet: BaseContract;
 }
 
 async function main(): Promise<DeployedContracts> {
-  const [deployer, admin, operator, treasury] = await ethers.getSigners();
+  const signers = await ethers.getSigners();
+  const deployer = signers[0];
+  const admin = signers[1] || deployer;
+  const operator = signers[2];
+  const treasury = signers[3];
+
+  if (!deployer) {
+    throw new Error("No deployer account found");
+  }
 
   console.log("Deploying contracts with account:", deployer.address);
   console.log("Account balance:", (await ethers.provider.getBalance(deployer.address)).toString());
 
-  // Configuration
+  // Configuration - use unique owners for MultiSig
+  const multiSigOwners = admin.address !== deployer.address 
+    ? [deployer.address, admin.address]
+    : [deployer.address]; // Use single owner if no separate admin
+  
   const config = {
     // PayoutManager config
     dailyPayoutLimit: ethers.parseEther("100"), // 100 ETH daily limit
@@ -23,7 +35,7 @@ async function main(): Promise<DeployedContracts> {
     feePercent: 100, // 1% fee
 
     // MultiSig config
-    multiSigOwners: [deployer.address, admin?.address || deployer.address],
+    multiSigOwners: multiSigOwners,
     confirmationsRequired: 1,
   };
 
@@ -134,11 +146,11 @@ async function main(): Promise<DeployedContracts> {
   console.log(JSON.stringify(deploymentInfo, null, 2));
 
   return {
-    payoutManager: payoutManager as unknown as Contract,
-    batchPayout: batchPayout as unknown as Contract,
-    licenseNFT: licenseNFT as unknown as Contract,
-    dePINOracle: dePINOracle as unknown as Contract,
-    multiSigWallet: multiSigWallet as unknown as Contract,
+    payoutManager,
+    batchPayout,
+    licenseNFT,
+    dePINOracle,
+    multiSigWallet,
   };
 }
 

@@ -69,6 +69,9 @@ contract LicenseNFT is
     /// @notice Emitted when renewal grace period is updated
     event RenewalGracePeriodUpdated(uint256 oldPeriod, uint256 newPeriod);
 
+    /// @notice Emitted when treasury is updated
+    event TreasuryUpdated(address indexed oldTreasury, address indexed newTreasury);
+
     // ============ Errors ============
 
     /// @notice Thrown when payment is insufficient
@@ -98,6 +101,12 @@ contract LicenseNFT is
     /// @notice Thrown when upgrading to same tier
     error SameTier();
 
+    /// @notice Thrown when admin address is zero
+    error InvalidAdmin();
+
+    /// @notice Thrown when treasury address is zero
+    error InvalidTreasuryAddress();
+
     // ============ Constructor ============
 
     /**
@@ -109,6 +118,9 @@ contract LicenseNFT is
         address admin,
         address _treasury
     ) ERC721("Viddhana License", "VLICENSE") {
+        if (admin == address(0)) revert InvalidAdmin();
+        if (_treasury == address(0)) revert InvalidTreasuryAddress();
+        
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(LICENSE_MANAGER_ROLE, admin);
 
@@ -427,7 +439,9 @@ contract LicenseNFT is
         address newTreasury
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(newTreasury != address(0), "Invalid treasury");
+        address oldTreasury = treasury;
         treasury = newTreasury;
+        emit TreasuryUpdated(oldTreasury, newTreasury);
     }
 
     /**

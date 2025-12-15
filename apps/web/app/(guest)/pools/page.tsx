@@ -1,259 +1,414 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Header } from '@/components/layout/header';
-import { Activity, Users, Zap, TrendingUp } from 'lucide-react';
+import {
+  Zap,
+  Activity,
+  Cpu,
+  Clock,
+  Layers,
+  Globe,
+  Server,
+  Shield,
+  Gauge,
+  Coins,
+  Timer,
+  Wallet,
+  Copy,
+  Check,
+  Sparkles,
+  TrendingUp,
+  Users,
+} from 'lucide-react';
 import { formatHashrate } from '@/lib/utils';
 import { usePoolStats } from '@/hooks/use-api';
+import { useState } from 'react';
 
-const formatNumber = (num: number) => num.toLocaleString();
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 },
+};
+
+const glowPulse = {
+  animate: {
+    boxShadow: [
+      '0 0 20px rgba(0,255,255,0.1)',
+      '0 0 40px rgba(0,255,255,0.2)',
+      '0 0 20px rgba(0,255,255,0.1)',
+    ],
+    transition: {
+      duration: 2,
+      repeat: Infinity,
+      ease: 'easeInOut',
+    },
+  },
+};
 
 export default function PoolsPage() {
-  const { data, isLoading } = usePoolStats();
-  const [poolStats, setPoolStats] = useState({
-    hashrate: 0,
-    networkHashrate: 0,
-    activeMiners: 0,
-    difficulty: 0,
-    blocksFound: 0,
-    luck: 100,
-  });
+  const { data: poolStats, isLoading } = usePoolStats();
+  const [copied, setCopied] = useState(false);
 
-  // Update poolStats when data changes
-  useEffect(() => {
-    if (data?.stats) {
-      setPoolStats({
-        hashrate: data.stats.hashrate || 0,
-        networkHashrate: data.stats.networkHashrate || 0,
-        activeMiners: data.stats.activeMiners || 0,
-        difficulty: data.stats.difficulty || 0,
-        blocksFound: data.stats.blocksFound || 0,
-        luck: data.stats.luck || 100,
-      });
-    }
-  }, [data]);
+  const stats = {
+    hashrate: poolStats?.hashrate || 0,
+    networkHashrate: poolStats?.networkHashrate || 0,
+    activeMiners: poolStats?.activeMiners || 0,
+    activeWorkers: poolStats?.activeWorkers || 0,
+    difficulty: poolStats?.difficulty || 0,
+    blocksFound: poolStats?.blocksFound || 0,
+    latestBlockNumber: poolStats?.latestBlockNumber || 0,
+    poolFee: poolStats?.poolFee || 1,
+  };
 
-  console.log('🔍 Pools Page - API Response:', {
-    rawData: data,
-    isLoading,
-    timestamp: new Date().toISOString()
-  });
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
-
-  console.log('📊 Pools Page - Processed Stats:', {
-    poolStats,
-    source: 'seed database via /api/v1/stats/pool',
-    debug: {
-      hasData: !!data,
-      hasStats: !!data?.stats,
-      rawHashrate: data?.stats?.hashrate,
-      processedHashrate: poolStats.hashrate,
-    }
-  });
+  const poolFeatures = [
+    { icon: Shield, label: 'DDoS Protected', color: 'text-cyan-400' },
+    { icon: Gauge, label: 'Low Latency', color: 'text-purple-400' },
+    { icon: Sparkles, label: 'PPLNS Rewards', color: 'text-cyan-400' },
+    { icon: TrendingUp, label: '99.9% Uptime', color: 'text-purple-400' },
+    { icon: Users, label: '24/7 Support', color: 'text-cyan-400' },
+    { icon: Wallet, label: 'Auto Payouts', color: 'text-purple-400' },
+  ];
 
   return (
     <>
       <Header />
-      <main className="min-h-screen pt-24 pb-12">
-        <div className="container mx-auto px-4">
-          <div className="mb-8">
-            <h1 className="text-h1">
-              <span className="text-accent">Mining</span> Pools
-            </h1>
-            <p className="text-foreground-subtle mt-2">
-              Live statistics from {poolStats.activeMiners} active miners (from seed data)
-            </p>
-          </div>
+      <main className="min-h-screen pt-24 pb-12 relative overflow-hidden">
+        {/* Background Effects */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]" />
+        </div>
 
-          {/* Pool Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            <StatCard
+        <div className="container mx-auto px-4 relative z-10">
+          {/* Hero Section */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-16"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 mb-6"
+            >
+              <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+              <span className="text-cyan-400 text-sm font-medium">LIVE</span>
+            </motion.div>
+            <h1 className="text-5xl md:text-6xl font-bold mb-4">
+              <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+                Pools & Stats
+              </span>
+            </h1>
+            <p className="text-foreground-subtle max-w-xl mx-auto">
+              Real-time mining statistics and pool information
+            </p>
+          </motion.div>
+
+          {/* Pool Info Card */}
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="mb-12"
+          >
+            <motion.div variants={itemVariants}>
+              <Card
+                variant="glass"
+                className="relative overflow-hidden border-cyan-500/20"
+              >
+                <motion.div {...glowPulse} className="p-8">
+                  {/* Pool Header */}
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                    <div className="flex items-center gap-4">
+                      <div className="relative">
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center border border-cyan-500/30">
+                          <Cpu className="w-8 h-8 text-cyan-400" />
+                        </div>
+                        <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-green-500 border-2 border-background" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold">Viddhana Pool</h2>
+                        <div className="flex items-center gap-3 mt-1">
+                          <span className="text-sm text-foreground-subtle">Ethash</span>
+                          <span className="text-foreground-subtle">•</span>
+                          <span className="text-sm text-cyan-400 font-medium">BTCD</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-4">
+                      <div className="px-4 py-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                        <span className="text-xs text-foreground-subtle block">Fee</span>
+                        <span className="text-lg font-bold text-cyan-400">{stats.poolFee}%</span>
+                      </div>
+                      <div className="px-4 py-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                        <span className="text-xs text-foreground-subtle block">Min Payout</span>
+                        <span className="text-lg font-bold text-purple-400">0.1 BTCD</span>
+                      </div>
+                      <div className="px-4 py-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                        <span className="text-xs text-foreground-subtle block">Payout</span>
+                        <span className="text-lg font-bold text-cyan-400">Every 2h</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Pool Info Grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <InfoItem icon={Coins} label="Coin" value="BTCD" />
+                    <InfoItem icon={Cpu} label="Algorithm" value="Ethash" />
+                    <InfoItem icon={Timer} label="Frequency" value="2 Hours" />
+                  </div>
+                </motion.div>
+              </Card>
+            </motion.div>
+          </motion.div>
+
+          {/* Network Stats Grid */}
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-12"
+          >
+            <NetworkStatCard
               icon={Zap}
               label="Pool Hashrate"
-              value={formatHashrate(poolStats.hashrate)}
-              color="accent"
+              value={formatHashrate(stats.hashrate)}
+              color="cyan"
               isLoading={isLoading}
             />
-            <StatCard
-              icon={Users}
-              label="Active Miners"
-              value={poolStats.activeMiners.toString()}
-              color="success"
-              isLoading={isLoading}
-            />
-            <StatCard
+            <NetworkStatCard
               icon={Activity}
-              label="Network Difficulty"
-              value={poolStats.difficulty.toString()}
+              label="Network Hashrate"
+              value={formatHashrate(stats.networkHashrate)}
               color="purple"
               isLoading={isLoading}
             />
-            <StatCard
-              icon={TrendingUp}
-              label="Blocks Found"
-              value={poolStats.blocksFound.toString()}
-              color="warning"
+            <NetworkStatCard
+              icon={Gauge}
+              label="Difficulty"
+              value={stats.difficulty.toLocaleString()}
+              color="cyan"
               isLoading={isLoading}
             />
-          </div>
+            <NetworkStatCard
+              icon={Clock}
+              label="Block Time"
+              value="~10s"
+              color="purple"
+              isLoading={isLoading}
+            />
+            <NetworkStatCard
+              icon={Layers}
+              label="Current Block"
+              value={stats.latestBlockNumber.toLocaleString()}
+              color="cyan"
+              isLoading={isLoading}
+            />
+          </motion.div>
 
-          {/* Pool Cards */}
-          <h2 className="text-h2 mb-6">Available Pools</h2>
-          <p className="text-foreground-subtle mb-4">
-            Total network hashrate: {formatHashrate(poolStats.networkHashrate)} | Pool luck: {poolStats.luck.toFixed(1)}%
-          </p>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <PoolCard
-              name="Viddhana Pool"
-              symbol="VIDP"
-              hashrate={formatHashrate(poolStats.hashrate)}
-              miners={poolStats.activeMiners}
-              fee="1%"
-              minPayout="0.001 BTC"
-              blocks={poolStats.blocksFound}
-            />
-            <PoolCard
-              name="Solo Mining"
-              symbol="SOLO"
-              hashrate={formatHashrate(poolStats.hashrate * 0.15)}
-              miners={Math.floor(poolStats.activeMiners * 0.1)}
-              fee="0%"
-              minPayout="0 BTC"
-              blocks={Math.floor(poolStats.blocksFound * 0.05)}
-            />
-            <PoolCard
-              name="PPLNS Pool"
-              symbol="PPLNS"
-              hashrate={formatHashrate(poolStats.hashrate * 0.85)}
-              miners={Math.floor(poolStats.activeMiners * 0.9)}
-              fee="0.5%"
-              minPayout="0.0001 BTC"
-              blocks={Math.floor(poolStats.blocksFound * 0.95)}
-            />
-          </div>
+          {/* Connection Details */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mb-12"
+          >
+            <Card variant="glass" className="border-purple-500/20 overflow-hidden">
+              <div className="p-6 md:p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                    <Server className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <h3 className="text-xl font-bold">Connection</h3>
+                </div>
 
-          {/* Connection Info */}
-          <section className="mt-16">
-            <h2 className="text-h2 mb-6">Connection Details</h2>
-            <Card variant="glass" padding="default">
-              <h3 className="text-h4 mb-4">Stratum Configuration</h3>
-              <div className="space-y-4">
-                <ConnectionInfo
-                  label="Server"
-                  value="stratum+tcp://pool.viddhana.io:3333"
-                />
-                <ConnectionInfo
-                  label="Username"
-                  value="YOUR_WALLET_ADDRESS.WORKER_NAME"
-                />
-                <ConnectionInfo label="Password" value="x" />
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-xs text-foreground-subtle uppercase tracking-wider mb-2 block">
+                        Stratum URL
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 px-4 py-3 rounded-lg bg-background/50 border border-white/10 text-cyan-400 font-mono text-sm">
+                          stratum.viddhana.com:3333
+                        </code>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => copyToClipboard('stratum+tcp://stratum.viddhana.com:3333')}
+                          className="shrink-0"
+                        >
+                          {copied ? (
+                            <Check className="w-4 h-4 text-green-400" />
+                          ) : (
+                            <Copy className="w-4 h-4" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs text-foreground-subtle uppercase tracking-wider mb-2 block">
+                        Region
+                      </label>
+                      <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-background/50 border border-white/10">
+                        <Globe className="w-4 h-4 text-purple-400" />
+                        <span className="text-foreground">Global</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-xs text-foreground-subtle uppercase tracking-wider mb-2 block">
+                        Username
+                      </label>
+                      <code className="block px-4 py-3 rounded-lg bg-background/50 border border-white/10 text-foreground-subtle font-mono text-sm">
+                        YOUR_WALLET.WORKER_NAME
+                      </code>
+                    </div>
+                    <div>
+                      <label className="text-xs text-foreground-subtle uppercase tracking-wider mb-2 block">
+                        Password
+                      </label>
+                      <code className="block px-4 py-3 rounded-lg bg-background/50 border border-white/10 text-foreground-subtle font-mono text-sm">
+                        x
+                      </code>
+                    </div>
+                  </div>
+                </div>
               </div>
             </Card>
-          </section>
+          </motion.div>
+
+          {/* Pool Features */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <div className="text-center mb-8">
+              <h3 className="text-2xl font-bold mb-2">Pool Features</h3>
+              <p className="text-foreground-subtle text-sm">Enterprise-grade mining infrastructure</p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {poolFeatures.map((feature, index) => (
+                <motion.div
+                  key={feature.label}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.6 + index * 0.05 }}
+                >
+                  <Card
+                    variant="glass"
+                    hover="glow"
+                    className="p-4 text-center border-white/5 hover:border-cyan-500/30 transition-all duration-300"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/10 to-purple-500/10 flex items-center justify-center mx-auto mb-3">
+                      <feature.icon className={`w-6 h-6 ${feature.color}`} />
+                    </div>
+                    <span className="text-xs font-medium text-foreground-subtle">
+                      {feature.label}
+                    </span>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
         </div>
       </main>
     </>
   );
 }
 
-interface StatCardProps {
+interface NetworkStatCardProps {
   icon: React.ElementType;
   label: string;
   value: string;
-  color: 'accent' | 'success' | 'purple' | 'warning';
+  color: 'cyan' | 'purple';
   isLoading?: boolean;
 }
 
-function StatCard({ icon: Icon, label, value, color, isLoading }: StatCardProps) {
+function NetworkStatCard({ icon: Icon, label, value, color, isLoading }: NetworkStatCardProps) {
   const colorClasses = {
-    accent: 'text-accent bg-accent/10',
-    success: 'text-success bg-success/10',
-    purple: 'text-purple bg-purple/10',
-    warning: 'text-warning bg-warning/10',
+    cyan: {
+      bg: 'from-cyan-500/10 to-cyan-500/5',
+      border: 'border-cyan-500/20 hover:border-cyan-500/40',
+      text: 'text-cyan-400',
+      glow: 'shadow-cyan-500/10',
+    },
+    purple: {
+      bg: 'from-purple-500/10 to-purple-500/5',
+      border: 'border-purple-500/20 hover:border-purple-500/40',
+      text: 'text-purple-400',
+      glow: 'shadow-purple-500/10',
+    },
   };
 
+  const colors = colorClasses[color];
+
   return (
-    <Card variant="glass" padding="default">
-      <div className="flex items-center gap-4">
-        <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
-          <Icon className="h-6 w-6" />
-        </div>
-        <div>
-          <p className="text-tiny text-foreground-subtle uppercase tracking-wide">
+    <motion.div variants={itemVariants}>
+      <Card
+        variant="glass"
+        className={`relative overflow-hidden ${colors.border} transition-all duration-300 hover:shadow-lg ${colors.glow}`}
+      >
+        <div className={`absolute inset-0 bg-gradient-to-br ${colors.bg} opacity-50`} />
+        <div className="relative p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className={`p-2 rounded-lg bg-background/50 ${colors.text}`}>
+              <Icon className="w-4 h-4" />
+            </div>
+          </div>
+          <p className="text-xs text-foreground-subtle uppercase tracking-wider mb-1">
             {label}
           </p>
           {isLoading ? (
-            <div className="h-7 w-24 bg-white/10 rounded animate-pulse mt-1" />
+            <div className="h-7 w-20 bg-white/10 rounded animate-pulse" />
           ) : (
-            <p className="text-xl font-bold font-data">{value}</p>
+            <p className={`text-xl font-bold font-data ${colors.text}`}>{value}</p>
           )}
         </div>
-      </div>
-    </Card>
+      </Card>
+    </motion.div>
   );
 }
 
-interface PoolCardProps {
-  name: string;
-  symbol: string;
-  hashrate: string;
-  miners: number;
-  fee: string;
-  minPayout: string;
-  blocks?: number;
-}
-
-function PoolCard({ name, symbol, hashrate, miners, fee, minPayout, blocks }: PoolCardProps) {
+function InfoItem({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+}) {
   return (
-    <Card variant="default" hover="glow" padding="default">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
-            <span className="text-accent font-bold text-sm">{symbol}</span>
-          </div>
-          <div>
-            <h3 className="font-semibold">{name}</h3>
-            <p className="text-tiny text-foreground-subtle">{symbol}</p>
-          </div>
-        </div>
-        <div className="text-right">
-          <p className="text-accent font-data font-semibold">{hashrate}</p>
-          <p className="text-tiny text-foreground-subtle">Pool Hashrate</p>
-        </div>
+    <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5">
+      <Icon className="w-4 h-4 text-cyan-400" />
+      <div>
+        <span className="text-xs text-foreground-subtle block">{label}</span>
+        <span className="text-sm font-medium">{value}</span>
       </div>
-
-      <div className="grid grid-cols-4 gap-3 pt-4 border-t border-white/5">
-        <div>
-          <p className="text-tiny text-foreground-subtle">Miners</p>
-          <p className="font-data">{formatNumber(miners)}</p>
-        </div>
-        <div>
-          <p className="text-tiny text-foreground-subtle">Fee</p>
-          <p className="font-data">{fee}</p>
-        </div>
-        <div>
-          <p className="text-tiny text-foreground-subtle">Min Payout</p>
-          <p className="font-data text-sm">{minPayout}</p>
-        </div>
-        {blocks !== undefined && (
-          <div>
-            <p className="text-tiny text-foreground-subtle">Blocks</p>
-            <p className="font-data text-success">{blocks}</p>
-          </div>
-        )}
-      </div>
-    </Card>
-  );
-}
-
-function ConnectionInfo({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-      <span className="text-sm text-foreground-subtle w-24">{label}:</span>
-      <code className="flex-1 px-3 py-2 rounded-lg bg-background text-accent font-mono text-sm break-all">
-        {value}
-      </code>
     </div>
   );
 }

@@ -49,7 +49,7 @@ export function RecentBlocks() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-bold text-accent">
-                      +{(Number(block.reward) / 1e8).toFixed(8)} VIDP
+                      +{(Number(block.reward) / 1e8).toFixed(8)} BTCD
                     </p>
                     <p className="text-xs text-foreground-muted">
                       {new Date(block.foundAt).toLocaleTimeString()}

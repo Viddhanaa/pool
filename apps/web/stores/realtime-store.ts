@@ -13,7 +13,7 @@ interface RealtimeState {
   lastUpdate: string | null;
   
   // Actions
-  setPoolStats: (stats: RealtimePoolStats) => void;
+  setPoolStats: (stats: RealtimePoolStats | null) => void;
   updateWorker: (update: RealtimeWorkerUpdate) => void;
   updateMultipleWorkers: (updates: RealtimeWorkerUpdate[]) => void;
   setConnected: (connected: boolean) => void;
@@ -27,7 +27,7 @@ const initialPoolStats: RealtimePoolStats = {
   difficulty: 0,
 };
 
-export const useRealtimeStore = create<RealtimeState>((set, get) => ({
+export const useRealtimeStore = create<RealtimeState>((set) => ({
   poolStats: initialPoolStats,
   workerUpdates: {},
   isConnected: false,
@@ -35,7 +35,7 @@ export const useRealtimeStore = create<RealtimeState>((set, get) => ({
 
   setPoolStats: (stats) =>
     set({
-      poolStats: stats,
+      poolStats: stats ?? initialPoolStats,
       lastUpdate: new Date().toISOString(),
     }),
 

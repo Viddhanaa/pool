@@ -33,6 +33,12 @@ const config: HardhatUserConfig = {
       url: "http://127.0.0.1:8545",
       chainId: 31337,
     },
+    viddhana: {
+      url: "http://127.0.0.1:8545",
+      chainId: 1337,
+      accounts: [PRIVATE_KEY],
+      gasPrice: "auto",
+    },
     atlasTestnet: {
       url: ATLAS_TESTNET_RPC,
       chainId: 622463, // Atlas L3 testnet chain ID
@@ -44,28 +50,6 @@ const config: HardhatUserConfig = {
       chainId: 622461, // Atlas L3 mainnet chain ID
       accounts: [PRIVATE_KEY],
       gasPrice: "auto",
-    },
-  },
-  namedAccounts: {
-    deployer: {
-      default: 0,
-      atlasTestnet: 0,
-      atlasMainnet: 0,
-    },
-    admin: {
-      default: 1,
-      atlasTestnet: 1,
-      atlasMainnet: 1,
-    },
-    operator: {
-      default: 2,
-      atlasTestnet: 2,
-      atlasMainnet: 2,
-    },
-    treasury: {
-      default: 3,
-      atlasTestnet: 3,
-      atlasMainnet: 3,
     },
   },
   gasReporter: {

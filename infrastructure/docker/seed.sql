@@ -7,33 +7,33 @@
 -- USERS (22 users: 20 miners + 1 admin + 1 demo)
 -- =============================================================================
 
-INSERT INTO users (id, wallet_address, username, email, payout_threshold, payout_address, is_active, created_at, updated_at) VALUES
+INSERT INTO users (id, wallet_address, username, email, minimum_payout, role, is_active, created_at, updated_at) VALUES
 -- Admin user
-('cm0admin00000000000000001', '0xADMIN000000000000000000000000000000000001', 'admin', 'admin@viddhana.io', 0.10, '0xADMIN000000000000000000000000000000000001', true, NOW() - INTERVAL '180 days', NOW()),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', '0xADMIN000000000000000000000000000000000001', 'admin', 'admin@viddhana.io', 0.10, 'admin', true, NOW() - INTERVAL '180 days', NOW()),
 -- Demo user for testing
-('cm0demo000000000000000001', '0xDEMO0000000000000000000000000000000000001', 'demo_user', 'demo@viddhana.io', 0.10, '0xDEMO0000000000000000000000000000000000001', true, NOW() - INTERVAL '90 days', NOW()),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12', '0xDEMO0000000000000000000000000000000000001', 'demo_user', 'demo@viddhana.io', 0.10, 'user', true, NOW() - INTERVAL '90 days', NOW()),
 -- Regular miners
-('cm0user000000000000000001', '0x1234567890abcdef1234567890abcdef12345601', 'miner_001', 'miner1@viddhana.io', 0.15, '0x1234567890abcdef1234567890abcdef12345601', true, NOW() - INTERVAL '60 days', NOW()),
-('cm0user000000000000000002', '0x1234567890abcdef1234567890abcdef12345602', 'miner_002', 'miner2@viddhana.io', 0.20, '0x1234567890abcdef1234567890abcdef12345602', true, NOW() - INTERVAL '55 days', NOW()),
-('cm0user000000000000000003', '0x1234567890abcdef1234567890abcdef12345603', 'miner_003', 'miner3@viddhana.io', 0.25, '0x1234567890abcdef1234567890abcdef12345603', true, NOW() - INTERVAL '50 days', NOW()),
-('cm0user000000000000000004', '0x1234567890abcdef1234567890abcdef12345604', 'miner_004', 'miner4@viddhana.io', 0.30, '0x1234567890abcdef1234567890abcdef12345604', true, NOW() - INTERVAL '45 days', NOW()),
-('cm0user000000000000000005', '0x1234567890abcdef1234567890abcdef12345605', 'miner_005', 'miner5@viddhana.io', 0.50, '0x1234567890abcdef1234567890abcdef12345605', true, NOW() - INTERVAL '40 days', NOW()),
-('cm0user000000000000000006', '0x1234567890abcdef1234567890abcdef12345606', 'miner_006', NULL, 0.10, '0x1234567890abcdef1234567890abcdef12345606', true, NOW() - INTERVAL '35 days', NOW()),
-('cm0user000000000000000007', '0x1234567890abcdef1234567890abcdef12345607', 'miner_007', NULL, 0.15, '0x1234567890abcdef1234567890abcdef12345607', true, NOW() - INTERVAL '30 days', NOW()),
-('cm0user000000000000000008', '0x1234567890abcdef1234567890abcdef12345608', 'miner_008', NULL, 0.20, '0x1234567890abcdef1234567890abcdef12345608', true, NOW() - INTERVAL '28 days', NOW()),
-('cm0user000000000000000009', '0x1234567890abcdef1234567890abcdef12345609', 'miner_009', NULL, 0.25, '0x1234567890abcdef1234567890abcdef12345609', true, NOW() - INTERVAL '25 days', NOW()),
-('cm0user000000000000000010', '0x1234567890abcdef1234567890abcdef12345610', 'miner_010', NULL, 0.30, '0x1234567890abcdef1234567890abcdef12345610', true, NOW() - INTERVAL '22 days', NOW()),
-('cm0user000000000000000011', '0x1234567890abcdef1234567890abcdef12345611', NULL, NULL, 0.10, '0x1234567890abcdef1234567890abcdef12345611', true, NOW() - INTERVAL '20 days', NOW()),
-('cm0user000000000000000012', '0x1234567890abcdef1234567890abcdef12345612', NULL, NULL, 0.15, '0x1234567890abcdef1234567890abcdef12345612', true, NOW() - INTERVAL '18 days', NOW()),
-('cm0user000000000000000013', '0x1234567890abcdef1234567890abcdef12345613', NULL, NULL, 0.20, '0x1234567890abcdef1234567890abcdef12345613', true, NOW() - INTERVAL '15 days', NOW()),
-('cm0user000000000000000014', '0x1234567890abcdef1234567890abcdef12345614', NULL, NULL, 0.25, '0x1234567890abcdef1234567890abcdef12345614', true, NOW() - INTERVAL '12 days', NOW()),
-('cm0user000000000000000015', '0x1234567890abcdef1234567890abcdef12345615', NULL, NULL, 0.30, '0x1234567890abcdef1234567890abcdef12345615', true, NOW() - INTERVAL '10 days', NOW()),
-('cm0user000000000000000016', '0x1234567890abcdef1234567890abcdef12345616', NULL, NULL, 0.50, '0x1234567890abcdef1234567890abcdef12345616', true, NOW() - INTERVAL '8 days', NOW()),
-('cm0user000000000000000017', '0x1234567890abcdef1234567890abcdef12345617', NULL, NULL, 0.75, '0x1234567890abcdef1234567890abcdef12345617', true, NOW() - INTERVAL '6 days', NOW()),
-('cm0user000000000000000018', '0x1234567890abcdef1234567890abcdef12345618', NULL, NULL, 1.00, '0x1234567890abcdef1234567890abcdef12345618', true, NOW() - INTERVAL '4 days', NOW()),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13', '0x1234567890abcdef1234567890abcdef12345601', 'miner_001', 'miner1@viddhana.io', 0.15, 'user', true, NOW() - INTERVAL '60 days', NOW()),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a14', '0x1234567890abcdef1234567890abcdef12345602', 'miner_002', 'miner2@viddhana.io', 0.20, 'user', true, NOW() - INTERVAL '55 days', NOW()),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15', '0x1234567890abcdef1234567890abcdef12345603', 'miner_003', 'miner3@viddhana.io', 0.25, 'user', true, NOW() - INTERVAL '50 days', NOW()),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a16', '0x1234567890abcdef1234567890abcdef12345604', 'miner_004', 'miner4@viddhana.io', 0.30, 'user', true, NOW() - INTERVAL '45 days', NOW()),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a17', '0x1234567890abcdef1234567890abcdef12345605', 'miner_005', 'miner5@viddhana.io', 0.50, 'user', true, NOW() - INTERVAL '40 days', NOW()),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a18', '0x1234567890abcdef1234567890abcdef12345606', 'miner_006', NULL, 0.10, 'user', true, NOW() - INTERVAL '35 days', NOW()),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a19', '0x1234567890abcdef1234567890abcdef12345607', 'miner_007', NULL, 0.15, 'user', true, NOW() - INTERVAL '30 days', NOW()),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a1a', '0x1234567890abcdef1234567890abcdef12345608', 'miner_008', NULL, 0.20, 'user', true, NOW() - INTERVAL '28 days', NOW()),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a1b', '0x1234567890abcdef1234567890abcdef12345609', 'miner_009', NULL, 0.25, 'user', true, NOW() - INTERVAL '25 days', NOW()),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a1c', '0x1234567890abcdef1234567890abcdef12345610', 'miner_010', NULL, 0.30, 'user', true, NOW() - INTERVAL '22 days', NOW()),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a1d', '0x1234567890abcdef1234567890abcdef12345611', NULL, NULL, 0.10, 'user', true, NOW() - INTERVAL '20 days', NOW()),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a1e', '0x1234567890abcdef1234567890abcdef12345612', NULL, NULL, 0.15, 'user', true, NOW() - INTERVAL '18 days', NOW()),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a1f', '0x1234567890abcdef1234567890abcdef12345613', NULL, NULL, 0.20, 'user', true, NOW() - INTERVAL '15 days', NOW()),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a20', '0x1234567890abcdef1234567890abcdef12345614', NULL, NULL, 0.25, 'user', true, NOW() - INTERVAL '12 days', NOW()),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a21', '0x1234567890abcdef1234567890abcdef12345615', NULL, NULL, 0.30, 'user', true, NOW() - INTERVAL '10 days', NOW()),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', '0x1234567890abcdef1234567890abcdef12345616', NULL, NULL, 0.50, 'user', true, NOW() - INTERVAL '8 days', NOW()),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a23', '0x1234567890abcdef1234567890abcdef12345617', NULL, NULL, 0.75, 'user', true, NOW() - INTERVAL '6 days', NOW()),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a24', '0x1234567890abcdef1234567890abcdef12345618', NULL, NULL, 1.00, 'user', true, NOW() - INTERVAL '4 days', NOW()),
 -- Inactive users
-('cm0user000000000000000019', '0x1234567890abcdef1234567890abcdef12345619', NULL, NULL, 0.10, '0x1234567890abcdef1234567890abcdef12345619', false, NOW() - INTERVAL '90 days', NOW()),
-('cm0user000000000000000020', '0x1234567890abcdef1234567890abcdef12345620', NULL, NULL, 0.10, '0x1234567890abcdef1234567890abcdef12345620', false, NOW() - INTERVAL '85 days', NOW())
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a25', '0x1234567890abcdef1234567890abcdef12345619', NULL, NULL, 0.10, 'user', false, NOW() - INTERVAL '90 days', NOW()),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a26', '0x1234567890abcdef1234567890abcdef12345620', NULL, NULL, 0.10, 'user', false, NOW() - INTERVAL '85 days', NOW())
 ON CONFLICT (wallet_address) DO NOTHING;
 
 -- =============================================================================

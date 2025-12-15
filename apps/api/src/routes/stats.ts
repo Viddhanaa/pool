@@ -14,6 +14,26 @@ const hashrateHistorySchema = z.object({
   }),
 });
 
+const topMinersSchema = z.object({
+  query: z.object({
+    limit: z.coerce.number().int().positive().max(100).default(5),
+  }),
+});
+
+const leaderboardQuerySchema = z.object({
+  query: z.object({
+    type: z.enum(['hashrate', 'blocks', 'earnings']).default('hashrate'),
+    period: z.enum(['day', 'week', 'month', 'all']).default('all'),
+    limit: z.coerce.number().int().positive().max(100).default(20),
+  }),
+});
+
+const hashrateHistoryQuerySchema = z.object({
+  query: z.object({
+    hours: z.coerce.number().int().positive().max(720).default(24),
+  }),
+});
+
 export async function statsRoutes(fastify: FastifyInstance): Promise<void> {
   /**
    * Get pool statistics (public)
@@ -45,12 +65,13 @@ export async function statsRoutes(fastify: FastifyInstance): Promise<void> {
    */
   fastify.get(
     '/hashrate',
+    {
+      preHandler: authenticate,
+    },
     async (request, reply) => {
-      // DEVELOPMENT: Allow without auth, use first user
-      let userId = (request as any).user?.userId;
+      const userId = request.user?.userId;
       if (!userId) {
-        const firstUser = await (fastify as any).prisma.user.findFirst({ where: { isActive: true } });
-        userId = firstUser?.id;
+        return reply.status(401).send({ error: 'Unauthorized' });
       }
 
       const stats = await statsService.getUserHashrateStats(userId);
@@ -63,11 +84,13 @@ export async function statsRoutes(fastify: FastifyInstance): Promise<void> {
    */
   fastify.get(
     '/earnings',
+    {
+      preHandler: authenticate,
+    },
     async (request, reply) => {
-      let userId = (request as any).user?.userId;
+      const userId = request.user?.userId;
       if (!userId) {
-        const firstUser = await (fastify as any).prisma.user.findFirst({ where: { isActive: true } });
-        userId = firstUser?.id;
+        return reply.status(401).send({ error: 'Unauthorized' });
       }
 
       const earnings = await statsService.getUserEarnings(userId);
@@ -80,12 +103,13 @@ export async function statsRoutes(fastify: FastifyInstance): Promise<void> {
    */
   fastify.get(
     '/dashboard',
+    {
+      preHandler: authenticate,
+    },
     async (request, reply) => {
-      // DEVELOPMENT: Allow without auth, use first user
-      let userId = (request as any).user?.userId;
+      const userId = request.user?.userId;
       if (!userId) {
-        const firstUser = await (fastify as any).prisma.user.findFirst({ where: { isActive: true } });
-        userId = firstUser?.id;
+        return reply.status(401).send({ error: 'Unauthorized' });
       }
 
       const [poolStats, hashrateStats, earnings] = await Promise.all([
@@ -154,6 +178,57 @@ export async function statsRoutes(fastify: FastifyInstance): Promise<void> {
         .map((user, index) => ({ ...user, rank: index + 1 }));
 
       return reply.send({ leaderboard: ranked.slice(0, 50) });
+    }
+  );
+
+  /**
+   * Get top miners (public)
+   */
+  fastify.get<{
+    Querystring: z.infer<typeof topMinersSchema>['query'];
+  }>(
+    '/top-miners',
+    {
+      preHandler: createValidationPreHandler(topMinersSchema),
+    },
+    async (request, reply) => {
+      const { limit } = request.query;
+      const topMiners = await statsService.getTopMiners(limit);
+      return reply.send({ data: topMiners });
+    }
+  );
+
+  /**
+   * Get leaderboard with filtering options (public)
+   */
+  fastify.get<{
+    Querystring: z.infer<typeof leaderboardQuerySchema>['query'];
+  }>(
+    '/leaderboard/ranked',
+    {
+      preHandler: createValidationPreHandler(leaderboardQuerySchema),
+    },
+    async (request, reply) => {
+      const { type, period, limit } = request.query;
+      const leaderboard = await statsService.getLeaderboard(type, period, limit);
+      return reply.send({ data: leaderboard });
+    }
+  );
+
+  /**
+   * Get hashrate history (public)
+   */
+  fastify.get<{
+    Querystring: z.infer<typeof hashrateHistoryQuerySchema>['query'];
+  }>(
+    '/hashrate-history',
+    {
+      preHandler: createValidationPreHandler(hashrateHistoryQuerySchema),
+    },
+    async (request, reply) => {
+      const { hours } = request.query;
+      const history = await statsService.getHashrateHistory(hours);
+      return reply.send({ data: history });
     }
   );
 }

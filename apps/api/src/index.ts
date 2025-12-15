@@ -6,8 +6,44 @@ import { payoutService } from './services/payout.service.js';
 
 const logger = createChildLogger('main');
 
+/**
+ * Validate required environment variables
+ */
+function validateEnvironment(): void {
+  const warnings: string[] = [];
+  
+  // Required for production
+  if (process.env.NODE_ENV === 'production') {
+    if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'development-secret-change-in-production') {
+      throw new Error('JWT_SECRET must be set in production');
+    }
+    if (!process.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL must be set');
+    }
+  }
+  
+  // Warnings for missing optional config
+  if (!process.env.DATABASE_URL) {
+    warnings.push('DATABASE_URL not set, using default');
+  }
+  if (!process.env.REDIS_URL) {
+    warnings.push('REDIS_URL not set, using localhost:6379');
+  }
+  if (!process.env.ETH_RPC_URL) {
+    warnings.push('ETH_RPC_URL not set, blockchain features disabled');
+  }
+  if (!process.env.POOL_WALLET_PRIVATE_KEY) {
+    warnings.push('POOL_WALLET_PRIVATE_KEY not set, payouts disabled');
+  }
+  
+  warnings.forEach(w => logger.warn(w));
+}
+
 async function main(): Promise<void> {
   logger.info('Starting ViddhanaPool API...');
+
+  // Validate environment
+  validateEnvironment();
 
   const { app, start, stop } = await buildApp();
 

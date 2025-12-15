@@ -6,8 +6,12 @@ import { apiClient } from '@/lib/api';
 export function usePoolStats() {
   return useQuery({
     queryKey: ['pool-stats'],
-    queryFn: () => apiClient.get('/stats/pool'),
-    refetchInterval: 10000,
+    queryFn: async () => {
+      const response = await apiClient.get<{ stats: any }>('/stats/pool');
+      return response.stats; // Extract stats from response
+    },
+    refetchInterval: 5000, // Refresh every 5 seconds for realtime updates
+    staleTime: 0, // Always consider data stale
   });
 }
 
@@ -81,6 +85,24 @@ export function useHashrateHistory(hours: number = 24) {
   return useQuery({
     queryKey: ['hashrate-history', hours],
     queryFn: () => apiClient.get('/stats/hashrate-history', { params: { hours } }),
+    refetchInterval: 30000,
+  });
+}
+
+// Leaderboard
+export function useLeaderboard(type: 'hashrate' | 'blocks' | 'earnings', period: 'day' | 'week' | 'month' | 'all' = 'all', limit: number = 20) {
+  return useQuery({
+    queryKey: ['leaderboard', type, period, limit],
+    queryFn: () => apiClient.get('/stats/leaderboard', { params: { type, period, limit } }),
+    refetchInterval: 30000,
+  });
+}
+
+// Top Miners
+export function useTopMiners(limit: number = 5) {
+  return useQuery({
+    queryKey: ['top-miners', limit],
+    queryFn: () => apiClient.get('/stats/top-miners', { params: { limit } }),
     refetchInterval: 30000,
   });
 }

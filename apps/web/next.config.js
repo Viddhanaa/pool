@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
   
   // Enable static export for nginx deployment
   output: 'export',
@@ -9,46 +8,16 @@ const nextConfig = {
   // Disable image optimization for static export
   images: {
     unoptimized: true,
-    domains: ['avatars.githubusercontent.com', 'images.unsplash.com'],
-    formats: ['image/avif', 'image/webp'],
-  },
-
-  // Headers for security
-  async headers() {
-    return [
+    remotePatterns: [
       {
-        source: '/:path*',
-        headers: [
-          {
-            key: 'X-DNS-Prefetch-Control',
-            value: 'on',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin',
-          },
-        ],
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
       },
-    ];
-  },
-
-  // Redirects
-  async redirects() {
-    return [
       {
-        source: '/home',
-        destination: '/',
-        permanent: true,
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
       },
-    ];
+    ],
   },
 
   // Environment variables validation

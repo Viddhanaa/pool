@@ -124,9 +124,37 @@ export const connectRedis = async (): Promise<void> => {
     return;
   }
   
+  // If already connecting, wait for it
+  if (redis.status === 'connecting') {
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('Redis connection timeout'));
+      }, 30000);
+      
+      redis.once('ready', () => {
+        clearTimeout(timeout);
+        resolve();
+      });
+      redis.once('error', (err) => {
+        clearTimeout(timeout);
+        reject(err);
+      });
+    });
+  }
+  
   return new Promise((resolve, reject) => {
-    redis.once('ready', resolve);
-    redis.once('error', reject);
+    const timeout = setTimeout(() => {
+      reject(new Error('Redis connection timeout'));
+    }, 30000);
+    
+    redis.once('ready', () => {
+      clearTimeout(timeout);
+      resolve();
+    });
+    redis.once('error', (err) => {
+      clearTimeout(timeout);
+      reject(err);
+    });
   });
 };
 

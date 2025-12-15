@@ -82,6 +82,9 @@ contract BatchPayout is AccessControl, Pausable, ReentrancyGuard {
     /// @notice Emitted when default expiry duration is updated
     event DefaultExpiryDurationUpdated(uint256 oldDuration, uint256 newDuration);
 
+    /// @notice Emitted when treasury is updated
+    event TreasuryUpdated(address indexed oldTreasury, address indexed newTreasury);
+
     // ============ Errors ============
 
     /// @notice Thrown when merkle root is invalid
@@ -116,12 +119,21 @@ contract BatchPayout is AccessControl, Pausable, ReentrancyGuard {
 
     // ============ Constructor ============
 
+    /// @notice Thrown when admin address is zero
+    error InvalidAdmin();
+
+    /// @notice Thrown when treasury address is zero
+    error InvalidTreasury();
+
     /**
      * @notice Initializes the contract with admin address
      * @param admin Address to receive admin role
      * @param _treasury Address to receive recovered funds
      */
     constructor(address admin, address _treasury) {
+        if (admin == address(0)) revert InvalidAdmin();
+        if (_treasury == address(0)) revert InvalidTreasury();
+        
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(MERKLE_MANAGER_ROLE, admin);
         treasury = _treasury;
@@ -278,7 +290,9 @@ contract BatchPayout is AccessControl, Pausable, ReentrancyGuard {
         address newTreasury
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(newTreasury != address(0), "Invalid treasury");
+        address oldTreasury = treasury;
         treasury = newTreasury;
+        emit TreasuryUpdated(oldTreasury, newTreasury);
     }
 
     /**

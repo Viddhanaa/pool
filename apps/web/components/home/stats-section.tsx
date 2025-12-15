@@ -2,17 +2,11 @@
 
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
-import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api';
+import { usePoolStats } from '@/hooks/use-api';
 
 export function StatsSection() {
-  const { data: statsData } = useQuery({
-    queryKey: ['blocks-stats'],
-    queryFn: () => apiClient.get('/blocks/stats'),
-    refetchInterval: 30000,
-  });
-
-  const stats = statsData?.stats;
+  // Use poolStats which has blockchain data (realtime every 5s)
+  const { data: poolStats } = usePoolStats();
 
   return (
     <section className="py-24 relative">
@@ -30,25 +24,25 @@ export function StatsSection() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           <StatCard
             label="Total Blocks"
-            value={stats?.totalBlocks.toLocaleString() || '—'}
-            trend={stats?.blocksLast24h ? `+${stats.blocksLast24h} today` : undefined}
+            value={poolStats?.latestBlockNumber?.toLocaleString() || '—'}
+            trend={poolStats?.latestBlockNumber ? 'Live from blockchain' : undefined}
           />
           <StatCard
-            label="Blocks (24h)"
-            value={stats?.blocksLast24h || '—'}
-            trend="Last 24 hours"
+            label="Active Miners"
+            value={poolStats?.activeMiners?.toLocaleString() || '0'}
+            trend="Currently mining"
           />
           <StatCard
-            label="Total Rewards"
-            value={stats?.totalRewards ? (stats.totalRewards / 1e8).toFixed(2) : '—'}
-            unit="VIDP"
+            label="Total Paid"
+            value={poolStats?.totalPaid ? poolStats.totalPaid.toFixed(2) : '0.00'}
+            unit="BTCD"
             trend="All time"
           />
           <StatCard
-            label="Success Rate"
-            value={stats ? `${(100 - stats.orphanRate).toFixed(1)}` : '—'}
+            label="Pool Fee"
+            value={poolStats?.poolFee ? poolStats.poolFee.toFixed(1) : '1.0'}
             unit="%"
-            trend={stats && stats.orphanRate < 5 ? 'Excellent' : 'Good'}
+            trend="Low fee"
           />
         </div>
       </div>

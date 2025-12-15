@@ -1,23 +1,27 @@
 version: "3.9"
 
+# =============================================================================
+# Viddhana Pool - Docker Compose Configuration
+# =============================================================================
+
 services:
   # =============================================================================
   # Database Services
   # =============================================================================
   postgres:
     image: timescale/timescaledb:latest-pg16
-    container_name: viddhana-postgres
+    container_name: viddhana-pool-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-viddhana}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-viddhana_secret}
       POSTGRES_DB: ${POSTGRES_DB:-viddhana_pool}
-      PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - pool_postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${POSTGRES_PORT:-5435}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-viddhana} -d ${POSTGRES_DB:-viddhana_pool}"]
       interval: 10s
@@ -32,20 +36,24 @@ services:
           memory: 2G
         reservations:
           memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
 
   # =============================================================================
   # Cache Services
   # =============================================================================
   redis:
     image: redis:7-alpine
-    container_name: viddhana-redis
+    container_name: viddhana-pool-redis
     restart: unless-stopped
-    command: redis-server /usr/local/etc/redis/redis.conf
+    command: redis-server --appendonly yes
     volumes:
-      - redis_data:/data
-      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - pool_redis_data:/data
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "${REDIS_PORT:-6382}:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -60,6 +68,11 @@ services:
           memory: 512M
         reservations:
           memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
 
   redis-commander:
     image: rediscommander/redis-commander:latest
@@ -128,6 +141,11 @@ services:
           memory: 1G
         reservations:
           memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
 
   stratum:
     build:
@@ -177,6 +195,11 @@ services:
           memory: 512M
         reservations:
           memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
 
   web:
     build:
@@ -219,6 +242,11 @@ services:
           memory: 1G
         reservations:
           memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "30m"
+        max-file: "3"
 
   prometheus-ai:
     build:
@@ -263,24 +291,27 @@ services:
           memory: 4G
         reservations:
           memory: 1G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
 
 # =============================================================================
 # Networks
 # =============================================================================
 networks:
   viddhana-network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.28.0.0/16
+    external: true
+    name: viddhana-network
 
 # =============================================================================
 # Volumes
 # =============================================================================
 volumes:
-  postgres_data:
+  pool_postgres_data:
     driver: local
-  redis_data:
+  pool_redis_data:
     driver: local
   api_node_modules:
     driver: local

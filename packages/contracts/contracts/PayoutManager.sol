@@ -134,6 +134,10 @@ contract PayoutManager is
         uint256 _minThreshold,
         uint256 _feePercent
     ) public initializer {
+        require(admin != address(0), "Invalid admin address");
+        require(_treasury != address(0), "Invalid treasury address");
+        require(_feePercent <= 1000, "Fee too high"); // Max 10%
+        
         __UUPSUpgradeable_init();
         __AccessControl_init();
         __Pausable_init();
@@ -438,7 +442,10 @@ contract PayoutManager is
     function setTreasury(
         address newTreasury
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(newTreasury != address(0), "Invalid treasury address");
+        address oldTreasury = treasury;
         treasury = newTreasury;
+        emit TreasuryUpdated(oldTreasury, newTreasury);
     }
 
     /**
@@ -449,7 +456,9 @@ contract PayoutManager is
         uint256 newFeePercent
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(newFeePercent <= 1000, "Fee too high"); // Max 10%
+        uint256 oldFee = feePercent;
         feePercent = newFeePercent;
+        emit FeePercentUpdated(oldFee, newFeePercent);
     }
 
     /**

@@ -77,6 +77,12 @@ interface IPayoutManager {
     /// @notice Emitted when minimum payout threshold is updated
     event MinPayoutThresholdUpdated(uint256 oldThreshold, uint256 newThreshold);
 
+    /// @notice Emitted when treasury is updated
+    event TreasuryUpdated(address indexed oldTreasury, address indexed newTreasury);
+
+    /// @notice Emitted when fee percent is updated
+    event FeePercentUpdated(uint256 oldFee, uint256 newFee);
+
     // ============ External Functions ============
 
     /**

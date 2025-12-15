@@ -8,19 +8,16 @@ import { createChildLogger } from '../lib/logger.js';
 const logger = createChildLogger('dashboard-routes');
 
 export async function dashboardRoutes(fastify: FastifyInstance): Promise<void> {
-  // DEVELOPMENT: Comment out auth to use seed data
-  // fastify.addHook('preHandler', authenticate);
+  // PRODUCTION: Enable authentication for all dashboard routes
+  fastify.addHook('preHandler', authenticate);
 
   /**
    * Get complete dashboard overview
    */
   fastify.get('/overview', async (request, reply) => {
-    // DEVELOPMENT: Use first seed user if not authenticated
-    let userId = request.user?.userId;
-
+    const userId = request.user?.userId;
     if (!userId) {
-      const firstUser = await fastify.prisma.user.findFirst({ where: { isActive: true } });
-      userId = firstUser?.id || 'mock-user';
+      return reply.status(401).send({ error: 'Unauthorized' });
     }
 
     const [
@@ -87,10 +84,9 @@ export async function dashboardRoutes(fastify: FastifyInstance): Promise<void> {
    * Get recent activity
    */
   fastify.get('/activity', async (request, reply) => {
-    let userId = request.user?.userId;
+    const userId = request.user?.userId;
     if (!userId) {
-      const firstUser = await fastify.prisma.user.findFirst({ where: { isActive: true } });
-      userId = firstUser?.id || 'mock-user';
+      return reply.status(401).send({ error: 'Unauthorized' });
     }
 
     const [recentPayouts, recentShares] = await Promise.all([
@@ -147,10 +143,9 @@ export async function dashboardRoutes(fastify: FastifyInstance): Promise<void> {
    * Get alerts/notifications
    */
   fastify.get('/alerts', async (request, reply) => {
-    let userId = request.user?.userId;
+    const userId = request.user?.userId;
     if (!userId) {
-      const firstUser = await fastify.prisma.user.findFirst({ where: { isActive: true } });
-      userId = firstUser?.id || 'mock-user';
+      return reply.status(401).send({ error: 'Unauthorized' });
     }
 
     const alerts: Array<{
@@ -220,10 +215,9 @@ export async function dashboardRoutes(fastify: FastifyInstance): Promise<void> {
    * Get quick stats for header
    */
   fastify.get('/quick-stats', async (request, reply) => {
-    let userId = request.user?.userId;
+    const userId = request.user?.userId;
     if (!userId) {
-      const firstUser = await fastify.prisma.user.findFirst({ where: { isActive: true } });
-      userId = firstUser?.id || 'mock-user';
+      return reply.status(401).send({ error: 'Unauthorized' });
     }
 
     const [hashrateStats, balance, workers] = await Promise.all([

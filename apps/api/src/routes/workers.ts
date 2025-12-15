@@ -197,13 +197,13 @@ export async function workerRoutes(fastify: FastifyInstance): Promise<void> {
     const online = result.workers.filter((w) => w.isOnline);
     const offline = result.workers.filter((w) => !w.isOnline);
 
-    const totalHashrate = online.reduce((sum, w) => sum + w.hashrate, 0);
+    const totalHashrate = online.reduce((sum, w) => sum + Number(w.hashrate), 0);
     const totalSharesAccepted = result.workers.reduce(
-      (sum, w) => sum + w.sharesAccepted,
+      (sum, w) => sum + Number(w.sharesAccepted),
       0
     );
     const totalSharesRejected = result.workers.reduce(
-      (sum, w) => sum + w.sharesRejected,
+      (sum, w) => sum + Number(w.sharesRejected),
       0
     );
 

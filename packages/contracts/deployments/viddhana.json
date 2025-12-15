@@ -1,0 +1,21 @@
+{
+  "network": "viddhana",
+  "chainId": 1337,
+  "deployer": "0xC6EF29019d6acB8F50F464A015CfeA63a8a45C15",
+  "timestamp": "2025-12-11T13:25:00.000Z",
+  "contracts": {
+    "MultiSigWallet": "0xAF53F4F1feAbea3aA9030b38Cac6dB68691BfD03",
+    "PayoutManager": {
+      "proxy": "0xd3E5A162D86EC18AFeD5c5fcE52fC6C3Ec7f7B48",
+      "implementation": "0x6052fB7B45640CC979317c0530c675a90e7f18a3"
+    },
+    "BatchPayout": "0x68A592341FB11e229DaCEF5BfF23bf927F225018",
+    "LicenseNFT": "0xa47429c124b4A817fe32EB5C9d7E7E5774BfAf13",
+    "DePINOracle": "0x240B4569Fc324B3203d393a5e3684A0ef8687A8f"
+  },
+  "configuration": {
+    "dailyPayoutLimit": "100 ETH",
+    "minPayoutThreshold": "0.01 ETH",
+    "feePercent": "1%"
+  }
+}

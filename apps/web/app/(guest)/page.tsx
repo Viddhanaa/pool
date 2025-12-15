@@ -1,71 +1,24 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { Header } from '@/components/layout/header';
 import { HeroSection } from '@/components/home/hero-section';
-import { StatsSection } from '@/components/home/stats-section';
-import { RecentBlocks } from '@/components/home/recent-blocks';
-import { StatCard } from '@/components/dashboard/stat-card';
-import { NetworkStats } from '@/components/dashboard/network-stats';
+import { LiveStats } from '@/components/home/live-stats';
+import { HashrateChart } from '@/components/home/hashrate-chart';
+import { TopMiners } from '@/components/home/top-miners';
 import { RecentBlocksWidget } from '@/components/dashboard/recent-blocks-widget';
-import { Box, Activity, Users, TrendingUp, Zap, Clock } from 'lucide-react';
 import { usePoolStats, useRecentBlocks } from '@/hooks/use-api';
+import { useMemo } from 'react';
 
 export default function HomePage() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  // Fetch real data from API - NO MOCK DATA
+  // Fetch real data from API with 5s refresh
   const { data: poolStats } = usePoolStats();
   const { data: blocksData } = useRecentBlocks(5);
 
-  // Log seed data from API
-  console.log('🔍 Homepage - Pool Stats:', {
-    poolStats,
-    source: 'seed database via /api/v1/stats/pool'
-  });
-  console.log('🔍 Homepage - Recent Blocks:', {
-    blocksData,
-    blockCount: blocksData?.blocks?.length,
-    source: 'seed database via /api/v1/blocks/recent'
-  });
-
-  // Simulate loading
-  useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Auto-refresh every 10 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setRefreshKey((prev) => prev + 1);
-    }, 10000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Use real API data - NO FALLBACK TO MOCK
-  const dashboardData = useMemo(() => {
-    const latestBlock = blocksData?.blocks?.[0];
-    return {
-      latestBlock: {
-        height: latestBlock?.height || 0,
-        time: latestBlock ? 'Just now' : 'Loading...',
-      },
-      poolHashrate: poolStats?.hashrate || 0,
-      networkHashrate: poolStats?.networkHashrate || 0,
-      difficulty: poolStats?.difficulty || 0,
-      avgBlockTime: 600,
-      totalTransactions: poolStats?.totalPaid ? (poolStats.totalPaid * 1000).toFixed(0) : '0',
-      activeMiners: poolStats?.activeMiners || 0,
-      blocksToday: poolStats?.blocksFound || 0,
-    };
-  }, [refreshKey, poolStats, blocksData]);
-
-  // Use real blocks from API - NO MOCK DATA
+  // Transform blocks data
   const recentBlocks = useMemo(() => {
     if (blocksData?.blocks && blocksData.blocks.length > 0) {
-      return blocksData.blocks.map((block: any) => ({
+      return blocksData.blocks.map((block: { id: string; height: number; hash: string; reward: number; confirmations: number; foundAt: string }) => ({
         id: block.id,
         height: block.height,
         hash: block.hash,
@@ -80,108 +33,138 @@ export default function HomePage() {
   return (
     <>
       <Header />
-      <main>
+      <main className="bg-background min-h-screen">
+        {/* Hero Section */}
         <HeroSection />
 
-        {/* Dashboard Stats Cards */}
-        <section className="py-12 bg-background-secondary/30">
-          <div className="container mx-auto px-4">
-            <h2 className="text-2xl font-bold mb-6">Live Dashboard</h2>
+        {/* Live Stats Section */}
+        <section className="relative py-16 bg-background-secondary/50">
+          {/* Background effects */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-0 left-1/4 w-96 h-96 bg-accent/5 rounded-full blur-[100px]" />
+            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple/5 rounded-full blur-[100px]" />
+          </div>
 
-            {/* Main Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <StatCard
-                title="Latest Block"
-                value={dashboardData.latestBlock.height > 0 ? `#${dashboardData.latestBlock.height.toLocaleString()}` : 'Loading...'}
-                subtitle={dashboardData.latestBlock.time}
-                icon={Box}
-                color="accent"
-                isLoading={isLoading}
-              />
-
-              <StatCard
-                title="Total Transactions"
-                value={dashboardData.totalTransactions}
-                subtitle="All time"
-                icon={Activity}
-                color="success"
-                isLoading={isLoading}
-              />
-
-              <StatCard
-                title="Active Miners"
-                value={dashboardData.activeMiners}
-                subtitle="Currently mining"
-                icon={Users}
-                color="purple"
-                isLoading={isLoading}
-              />
-
-              <StatCard
-                title="Blocks Today"
-                value={dashboardData.blocksToday}
-                subtitle="Last 24 hours"
-                icon={TrendingUp}
-                color="warning"
-                isLoading={isLoading}
-              />
-            </div>
-
-            {/* Secondary Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-              <StatCard
-                title="Pool Hashrate"
-                value={dashboardData.poolHashrate > 0 ? `${(dashboardData.poolHashrate / 1e12).toFixed(2)} TH/s` : 'Loading...'}
-                subtitle="Current mining power"
-                icon={Zap}
-                color="accent"
-                isLoading={isLoading}
-              />
-
-              <StatCard
-                title="Network Difficulty"
-                value={dashboardData.difficulty > 0 ? `${(dashboardData.difficulty / 1e12).toFixed(2)} T` : 'Loading...'}
-                subtitle="Current difficulty"
-                icon={Activity}
-                color="success"
-                isLoading={isLoading}
-              />
-
-              <StatCard
-                title="Avg Block Time"
-                value="10m 0s"
-                subtitle="Last 100 blocks"
-                icon={Clock}
-                color="purple"
-                isLoading={isLoading}
-              />
-            </div>
-
-            {/* Widgets Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-              <div className="h-full">
-                <RecentBlocksWidget
-                  blocks={recentBlocks}
-                  isLoading={isLoading}
-                />
+          <div className="container mx-auto px-4 relative z-10">
+            {/* Section header */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-10"
+            >
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 mb-4">
+                <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+                <span className="text-xs text-accent uppercase tracking-wider">Live</span>
               </div>
+              <h2 className="text-3xl md:text-4xl font-bold">
+                <span className="text-foreground">Pool </span>
+                <span className="text-accent">Statistics</span>
+              </h2>
+            </motion.div>
 
-              <div className="h-full">
-                <NetworkStats
-                  poolHashrate={dashboardData.poolHashrate}
-                  networkHashrate={dashboardData.networkHashrate}
-                  difficulty={dashboardData.difficulty}
-                  blockTime={dashboardData.avgBlockTime}
-                  isLoading={isLoading}
-                />
-              </div>
+            {/* Real-time stats grid */}
+            <LiveStats />
+          </div>
+        </section>
+
+        {/* Charts and Data Section */}
+        <section className="relative py-16 bg-background">
+          {/* Scan line effect */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
+            <motion.div
+              className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent to-transparent"
+              animate={{ y: [0, 500, 0] }}
+              transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+            />
+          </div>
+
+          <div className="container mx-auto px-4 relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* 24h Hashrate Chart */}
+              <HashrateChart />
+
+              {/* Top Miners */}
+              <TopMiners />
             </div>
           </div>
         </section>
 
-        <StatsSection />
+        {/* Recent Blocks Section */}
+        <section className="relative py-16 bg-background-secondary/30">
+          {/* Grid background */}
+          <div
+            className="absolute inset-0 opacity-5"
+            style={{
+              backgroundImage: `
+                linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px)
+              `,
+              backgroundSize: '40px 40px',
+            }}
+          />
+
+          <div className="container mx-auto px-4 relative z-10">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-10"
+            >
+              <h2 className="text-3xl md:text-4xl font-bold">
+                <span className="text-foreground">Recent </span>
+                <span className="text-purple">Blocks</span>
+              </h2>
+              <p className="text-foreground-muted mt-2">BTCD Network</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="max-w-4xl mx-auto"
+            >
+              <RecentBlocksWidget blocks={recentBlocks} isLoading={false} />
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Pool Info Footer Section */}
+        <section className="relative py-20 bg-background overflow-hidden">
+          {/* Background orbs */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent/5 rounded-full blur-[150px]" />
+
+          <div className="container mx-auto px-4 relative z-10">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="text-center"
+            >
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-3xl mx-auto">
+                <InfoBlock label="Pool Fee" value={`${poolStats?.poolFee || 1}%`} />
+                <InfoBlock label="Payout" value="Instant" />
+                <InfoBlock label="Coin" value="BTCD" />
+                <InfoBlock label="Protocol" value="Stratum" />
+              </div>
+            </motion.div>
+          </div>
+        </section>
       </main>
     </>
   );
 }
 
+function InfoBlock({ label, value }: { label: string; value: string }) {
+  return (
+    <motion.div
+      className="text-center"
+      whileHover={{ scale: 1.05 }}
+      transition={{ type: 'spring', stiffness: 400 }}
+    >
+      <p className="text-3xl md:text-4xl font-bold font-data text-accent mb-1">{value}</p>
+      <p className="text-xs text-foreground-muted uppercase tracking-wider">{label}</p>
+    </motion.div>
+  );
+}

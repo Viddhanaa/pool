@@ -13,6 +13,7 @@ const guestNavigation = [
     { name: 'Pools', href: '/pools' },
     { name: 'Blocks', href: '/blocks' },
     { name: 'Leaderboard', href: '/leaderboard' },
+    { name: 'Guide', href: '/guide' },
 ];
 
 export function Header() {

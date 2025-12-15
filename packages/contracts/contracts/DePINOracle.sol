@@ -46,6 +46,9 @@ contract DePINOracle is
     /// @notice Mapping from rig ID to array of energy reports
     mapping(bytes32 => EnergyReport[]) private _energyReports;
 
+    /// @notice Mapping from rig ID to current write index for ring buffer
+    mapping(bytes32 => uint256) private _energyReportIndex;
+
     /// @notice Chainlink oracle address (for future integration)
     address public chainlinkOracle;
 
@@ -76,8 +79,17 @@ contract DePINOracle is
         uint256 fee
     );
 
+    /// @notice Emitted when a rig is reactivated
+    event RigReactivated(bytes32 indexed rigId, address indexed owner);
+
+    /// @notice Emitted when rig ownership is transferred
+    event RigOwnershipTransferred(bytes32 indexed rigId, address indexed previousOwner, address indexed newOwner);
+
     /// @notice Emitted when registration fee is updated
     event RegistrationFeeUpdated(uint256 oldFee, uint256 newFee);
+
+    /// @notice Emitted when treasury is updated
+    event TreasuryUpdated(address indexed oldTreasury, address indexed newTreasury);
 
     // ============ Errors ============
 
@@ -111,6 +123,12 @@ contract DePINOracle is
     /// @notice Thrown when energy value is zero
     error InvalidEnergyValue();
 
+    /// @notice Thrown when admin address is zero
+    error InvalidAdmin();
+
+    /// @notice Thrown when treasury address is zero  
+    error InvalidTreasury();
+
     // ============ Constructor ============
 
     /**
@@ -119,6 +137,9 @@ contract DePINOracle is
      * @param _treasury Address to receive fees
      */
     constructor(address admin, address _treasury) {
+        if (admin == address(0)) revert InvalidAdmin();
+        if (_treasury == address(0)) revert InvalidTreasury();
+        
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(ORACLE_OPERATOR_ROLE, admin);
         _grantRole(VERIFIER_ROLE, admin);
@@ -283,16 +304,18 @@ contract DePINOracle is
             verified: false
         });
 
-        // Manage report storage (ring buffer behavior)
-        if (_energyReports[rigId].length >= maxEnergyReports) {
-            // Remove oldest report (shift array)
-            for (uint256 i = 0; i < _energyReports[rigId].length - 1; i++) {
-                _energyReports[rigId][i] = _energyReports[rigId][i + 1];
-            }
-            _energyReports[rigId].pop();
+        // Gas-optimized ring buffer implementation
+        uint256 currentLength = _energyReports[rigId].length;
+        if (currentLength < maxEnergyReports) {
+            // Array not yet full, just push
+            _energyReports[rigId].push(report);
+        } else {
+            // Array full, overwrite oldest entry using ring buffer index
+            uint256 writeIndex = _energyReportIndex[rigId] % maxEnergyReports;
+            _energyReports[rigId][writeIndex] = report;
+            _energyReportIndex[rigId] = writeIndex + 1;
         }
-
-        _energyReports[rigId].push(report);
+        
         rig.totalEnergyReported += energyConsumed;
 
         emit EnergyReported(rigId, energyConsumed, block.timestamp, proofHash);
@@ -321,6 +344,7 @@ contract DePINOracle is
         if (rig.owner != msg.sender) revert NotRigOwner(rigId);
 
         rig.isActive = true;
+        emit RigReactivated(rigId, msg.sender);
     }
 
     /**
@@ -334,7 +358,9 @@ contract DePINOracle is
         if (rig.owner != msg.sender) revert NotRigOwner(rigId);
         require(newOwner != address(0), "Invalid new owner");
 
+        address previousOwner = rig.owner;
         rig.owner = newOwner;
+        emit RigOwnershipTransferred(rigId, previousOwner, newOwner);
     }
 
     // ============ Admin Functions ============
@@ -398,7 +424,9 @@ contract DePINOracle is
         address newTreasury
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(newTreasury != address(0), "Invalid treasury");
+        address oldTreasury = treasury;
         treasury = newTreasury;
+        emit TreasuryUpdated(oldTreasury, newTreasury);
     }
 
     /**

@@ -4,6 +4,16 @@ import { Card } from '@/components/ui/card';
 import { Activity, Zap, TrendingUp, Box } from 'lucide-react';
 import { formatHashrate } from '@/lib/utils';
 
+// Helper to format difficulty with appropriate unit
+function formatDifficulty(difficulty: number): string {
+  if (difficulty >= 1e15) return `${(difficulty / 1e15).toFixed(2)} P`;
+  if (difficulty >= 1e12) return `${(difficulty / 1e12).toFixed(2)} T`;
+  if (difficulty >= 1e9) return `${(difficulty / 1e9).toFixed(2)} G`;
+  if (difficulty >= 1e6) return `${(difficulty / 1e6).toFixed(2)} M`;
+  if (difficulty >= 1e3) return `${(difficulty / 1e3).toFixed(2)} K`;
+  return difficulty.toString();
+}
+
 interface NetworkStatsProps {
   poolHashrate: number;
   networkHashrate: number;
@@ -19,7 +29,10 @@ export function NetworkStats({
   blockTime,
   isLoading = false,
 }: NetworkStatsProps) {
-  const poolShare = ((poolHashrate / networkHashrate) * 100).toFixed(2);
+  // Prevent division by zero and NaN
+  const poolShare = networkHashrate > 0 
+    ? ((poolHashrate / networkHashrate) * 100).toFixed(2) 
+    : '0.00';
 
   const stats = [
     {
@@ -75,7 +88,7 @@ export function NetworkStats({
           <div className="flex items-center justify-between text-sm">
             <span className="text-foreground-subtle">Network Difficulty</span>
             <span className="font-mono font-medium">
-              {(difficulty / 1e12).toFixed(2)} T
+              {formatDifficulty(difficulty)}
             </span>
           </div>
         </div>

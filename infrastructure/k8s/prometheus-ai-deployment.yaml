@@ -69,10 +69,11 @@ spec:
       containers:
         - name: prometheus-ai
           image: viddhana/prometheus-ai:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
             capabilities:
               drop:
                 - ALL
@@ -134,10 +135,12 @@ spec:
               cpu: "1"
               memory: 2Gi
               nvidia.com/gpu: 1
+              ephemeral-storage: 500Mi
             limits:
               cpu: "4"
               memory: 8Gi
               nvidia.com/gpu: 1
+              ephemeral-storage: 2Gi
           
           livenessProbe:
             httpGet:

@@ -44,7 +44,7 @@ metadata:
     
     # CORS
     nginx.ingress.kubernetes.io/enable-cors: "true"
-    nginx.ingress.kubernetes.io/cors-allow-origin: "https://viddhana.io,https://www.viddhana.io"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://viddhana.io,https://www.viddhana.io,https://pool.viddhana.com,https://scan.viddhana.com,https://miner.viddhana.com"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
     nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
 spec:
@@ -54,6 +54,7 @@ spec:
         - viddhana.io
         - www.viddhana.io
         - api.viddhana.io
+        - pool.viddhana.com
       secretName: viddhana-tls
   rules:
     # Main website
@@ -79,6 +80,35 @@ spec:
                 name: web
                 port:
                   number: 3000
+    
+    # Pool subdomain - Mining Pool Frontend + API
+    - host: pool.viddhana.com
+      http:
+        paths:
+          # API endpoints
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: pool-api
+                port:
+                  number: 5001
+          # WebSocket for real-time updates
+          - path: /socket.io
+            pathType: Prefix
+            backend:
+              service:
+                name: pool-api
+                port:
+                  number: 5001
+          # Frontend static files
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pool-web
+                port:
+                  number: 80
     
     # API subdomain
     - host: api.viddhana.io

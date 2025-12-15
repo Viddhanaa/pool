@@ -363,6 +363,22 @@ export class AuthService {
       createdAt: user.createdAt,
     };
   }
+
+  /**
+   * Verify 2FA token for a user
+   */
+  async verifyTwoFactorToken(userId: string, token: string): Promise<boolean> {
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { twoFactorSecret: true, twoFactorEnabled: true },
+    });
+
+    if (!user || !user.twoFactorEnabled || !user.twoFactorSecret) {
+      return false;
+    }
+
+    return this.verifyTOTP(user.twoFactorSecret, token);
+  }
 }
 
 export const authService = new AuthService();

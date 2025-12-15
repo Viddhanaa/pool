@@ -402,8 +402,3 @@ describe("LicenseNFT", function () {
     });
   });
 });
-
-// Helper to get any value for event testing
-async function getAnyValue(): Promise<bigint> {
-  return BigInt(0);
-}

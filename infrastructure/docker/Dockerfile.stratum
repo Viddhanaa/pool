@@ -39,9 +39,10 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 # -----------------------------------------------------------------------------
 FROM alpine:3.19 AS runner
 
-# Install runtime dependencies
-RUN apk add --no-cache ca-certificates wget tzdata && \
-    update-ca-certificates
+# Install runtime dependencies and security updates
+RUN apk add --no-cache ca-certificates wget tzdata dumb-init && \
+    update-ca-certificates && \
+    apk upgrade --no-cache
 
 # Security: Create non-root user
 RUN addgroup -S -g 1001 stratum && \
@@ -73,6 +74,6 @@ USER stratum
 # Expose ports (Stratum + Metrics)
 EXPOSE 3333 9090
 
-# Start the application
-ENTRYPOINT ["./stratum"]
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--", "./stratum"]
 CMD ["--config", "/app/configs/config.yaml"]
