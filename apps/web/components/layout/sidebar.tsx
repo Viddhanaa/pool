@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
@@ -51,6 +52,7 @@ export function Sidebar() {
   const sidebarContent = (
     <>
       {/* Logo */}
+<<<<<<< HEAD
       <div className="flex items-center justify-between h-16 px-4 border-b border-cyan-500/10">
         {!isCollapsed && (
           <Link href="/" className="flex items-center gap-3 group">
@@ -87,83 +89,75 @@ export function Sidebar() {
             <ChevronRight className="h-4 w-4" />
           ) : (
             <ChevronLeft className="h-4 w-4" />
+=======
+      <div className="flex items-center justify-between h-16 px-4 border-b border-white/5">
+        <Link href="/" className={cn("flex items-center gap-3", isCollapsed && "mx-auto")}>
+          <Image
+            src="/logo/logo.png"
+            alt="VIDDHANA POOL Logo"
+            width={36}
+            height={36}
+            className="object-contain"
+          />
+          {!isCollapsed && (
+            <span className="font-bold text-lg">
+              <span className="text-accent">VIDDHANA</span>
+            </span>
+>>>>>>> 1e6793ea15282deec4c2d47a86393c6dab9a34db
           )}
-        </Button>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
-        {navigation.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              onClick={() => setIsMobileOpen(false)}
-              className={cn(
-                'relative flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-300 group',
-                isActive
-                  ? 'bg-gradient-to-r from-cyan-500/15 to-purple-500/15 text-cyan-400 border border-cyan-500/30'
-                  : 'text-gray-400 hover:text-cyan-400 hover:bg-cyan-500/5 border border-transparent',
-                isCollapsed && 'justify-center px-2'
-              )}
-            >
-              {/* Active glow effect */}
-              {isActive && (
-                <>
-                  <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-cyan-500/10 to-purple-500/10 blur-sm" />
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-cyan-400 to-purple-500 rounded-r-full shadow-lg shadow-cyan-500/50" />
-                </>
-              )}
-              <item.icon
-                className={cn(
-                  'relative z-10 h-5 w-5 flex-shrink-0 transition-all duration-300',
-                  isActive
-                    ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]'
-                    : 'text-gray-500 group-hover:text-cyan-400'
-                )}
-              />
-              {!isCollapsed && (
-                <span className="relative z-10 transition-colors">{item.name}</span>
-              )}
-              {/* Hover glow */}
-              {!isActive && (
-                <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 bg-gradient-to-r from-cyan-500/5 to-purple-500/5 transition-opacity duration-300" />
-              )}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* User Info & Logout */}
-      <div className="mt-auto border-t border-cyan-500/10">
-        {/* User Info */}
-        <div className={cn('p-4', isCollapsed && 'p-2')}>
-          {!isCollapsed ? (
-            <div className="p-3 rounded-xl bg-gradient-to-r from-cyan-500/5 to-purple-500/5 border border-cyan-500/20">
-              <p className="text-[10px] text-cyan-500/60 uppercase tracking-wider mb-1">
-                Connected Wallet
-              </p>
-              <p className="text-sm font-mono text-cyan-400 truncate">
-                {truncateAddress(mockUser.walletAddress)}
-              </p>
-            </div>
-          ) : (
-            <div className="w-10 h-10 mx-auto rounded-xl bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/20 flex items-center justify-center">
-              <Wallet className="h-4 w-4 text-cyan-500/60" />
-            </div>
-          )}
-        </div>
-
-        {/* Logout Button */}
-        <div className={cn('px-3 pb-4', isCollapsed && 'px-2')}>
+        </Link>
+        {!isCollapsed && (
           <Button
             variant="ghost"
-            onClick={handleLogout}
-            className={cn(
-              'w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-gray-400 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/30 transition-all duration-300',
-              isCollapsed && 'justify-center px-2'
-            )}
+            size="icon-sm"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+        )}
+        {isCollapsed && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            const sidebarContent = (
+              <>
+                {/* Logo + Collapse Toggle */}
+                <div className="flex items-center justify-between h-16 px-4 border-b border-white/5">
+                  <Link href="/" className={cn("flex items-center gap-3", isCollapsed && "mx-auto")}> 
+                    <Image
+                      src="/logo/logo.png"
+                      alt="VIDDHANA POOL Logo"
+                      width={36}
+                      height={36}
+                      className="object-contain"
+                    />
+                    {!isCollapsed && (
+                      <span className="font-bold text-lg">
+                        <span className="text-accent">VIDDHANA</span>
+                      </span>
+                    )}
+                  </Link>
+                  {!isCollapsed && (
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => setIsCollapsed(!isCollapsed)}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {isCollapsed && (
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => setIsCollapsed(!isCollapsed)}
+                      className="absolute top-3 right-2"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
           >
             <LogOut className="h-5 w-5 flex-shrink-0" />
             {!isCollapsed && <span>Logout</span>}
